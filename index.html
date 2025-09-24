@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MOHO AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=El+Messiri:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-KiWOvVjnN8qwZu2pzTTa9XWbMhuPclFaVjlDEImfaq2zE6v+lrN+rY6oN//g6fF5" crossorigin="anonymous">
+    <style>
+      :root {
+        --token-main-surface-primary: #F0F4F9;
+        --token-main-surface-secondary: #FFFFFF;
+        --token-main-surface-tertiary: #E8F0FE;
+        --token-text-primary: #1F1F1F;
+        --token-text-secondary: #444746;
+        --token-text-tertiary: #747775;
+        --token-text-on-primary: #FFFFFF;
+        
+        --token-icon-primary: #1F1F1F;
+        --token-icon-secondary: #444746;
+        --token-icon-tertiary: #747775;
+        
+        --token-border-default: #DFE1E5;
+        
+        --token-interactive-bg-primary: #1A73E8;
+        --token-interactive-bg-primary-hover: #1765CC;
+        --token-interactive-bg-primary-container: #D2E3FC;
+        --token-on-primary-container: #041E49;
+        
+        --token-quran-text: #B45309;
+        --token-quran-highlight: rgba(251, 191, 36, 0.2);
+
+        --elevation-1: 0 1px 2px 0 rgba(0,0,0,0.06), 0 1px 3px 1px rgba(0,0,0,0.04);
+        --elevation-2: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+        --elevation-3: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.08);
+        
+        /* Font settings */
+        --font-size-base: 16px;
+        --font-family-sans: 'IBM Plex Sans Arabic', sans-serif;
+        --font-family-serif: 'Amiri', serif;
+      }
+      html.dark {
+        --token-main-surface-primary: #131314;
+        --token-main-surface-secondary: #1E1F20;
+        --token-main-surface-tertiary: #2D2E30;
+        --token-text-primary: #E3E3E3;
+        --token-text-secondary: #C4C7C5;
+        --token-text-tertiary: #8E918F;
+        --token-text-on-primary: #062E6F;
+        --token-interactive-bg-primary-container: #253043;
+        --token-on-primary-container: #D2E3FC;
+
+        --token-icon-primary: #E3E3E3;
+        --token-icon-secondary: #C4C7C5;
+        --token-icon-tertiary: #8E918F;
+        
+        --token-border-default: #444746;
+        
+        --token-interactive-bg-primary: #8AB4F8;
+        --token-interactive-bg-primary-hover: #9AC1F9;
+        
+        --token-quran-text: #FBBF24;
+        --token-quran-highlight: rgba(251, 191, 36, 0.15);
+
+        --elevation-1: 0 1px 2px 0 rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.25);
+        --elevation-2: 0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
+        --elevation-3: 0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.4);
+      }
+      html {
+        font-size: var(--font-size-base);
+      }
+      body {
+        font-family: var(--font-family-sans);
+        background-color: var(--token-main-surface-primary);
+        color: var(--token-text-primary);
+      }
+      .font-quran {
+        font-family: 'Amiri', serif;
+      }
+      .font-serif {
+        font-family: var(--font-family-serif);
+      }
+      .font-sans-alt {
+         font-family: 'Noto Sans', sans-serif;
+      }
+       .font-mono-alt {
+         font-family: 'Roboto', monospace;
+       }
+       .font-teacher {
+          font-family: 'El Messiri', sans-serif;
+       }
+
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--token-border-default);
+        border-radius: 10px;
+        border: 2px solid var(--token-main-surface-primary);
+      }
+       ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--token-text-tertiary);
+      }
+
+      /* Custom KaTeX Styling for Math Equations */
+      .katex {
+        font-size: 1.1em !important;
+        font-family: 'KaTeX_Main', 'Amiri', serif;
+        color: var(--token-text-primary);
+      }
+      .katex-display {
+        display: block;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.75rem;
+        background-color: var(--token-main-surface-tertiary);
+        border: 1px solid var(--token-border-default);
+        text-align: center;
+      }
+      .katex-display > .katex {
+        font-size: 1.25em !important;
+      }
+      /* Ensure scrollbars look decent on webkit browsers */
+      .katex-display::-webkit-scrollbar {
+        height: 8px;
+      }
+      .katex-display::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .katex-display::-webkit-scrollbar-thumb {
+        background-color: var(--token-border-default);
+        border-radius: 10px;
+        border: 2px solid var(--token-main-surface-tertiary);
+      }
+
+      /* Ripple Effect */
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple-animation 0.6s linear;
+        pointer-events: none;
+      }
+      @keyframes ripple-animation {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+      }
+      html.dark .ripple {
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+      
+      /* New Animations */
+      @keyframes typing-cursor-pulse {
+        0%, 100% { transform: scale(0.8); }
+        50% { transform: scale(1.2); }
+      }
+      @keyframes typing-cursor-color {
+        0%, 100% { background-color: var(--token-text-primary); }
+        50% { background-color: var(--token-text-tertiary); }
+      }
+      .typing-cursor {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.25rem;
+        vertical-align: middle;
+        animation: typing-cursor-pulse 1s infinite ease-in-out, typing-cursor-color 1s infinite ease-in-out;
+      }
+
+      @keyframes loading-shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      .loading-shimmer-bar {
+        position: relative;
+        overflow: hidden;
+        background-color: var(--token-main-surface-tertiary);
+      }
+      .loading-shimmer-bar::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        animation: loading-shimmer 1.5s infinite linear;
+      }
+      html.dark .loading-shimmer-bar::after {
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      }
+      
+      @keyframes icon-glow {
+        0%, 100% { box-shadow: 0 0 5px 0px rgba(59, 130, 246, 0.3); }
+        50% { box-shadow: 0 0 15px 5px rgba(59, 130, 246, 0.5); }
+      }
+      .animate-icon-glow {
+        animation: icon-glow 2s infinite ease-in-out;
+      }
+
+
+      /* Grid Background */
+      .grid-background {
+        background-image:
+            linear-gradient(rgba(128, 128, 128, 0.2) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(128, 128, 128, 0.2) 1px, transparent 1px);
+        background-size: 20px 20px;
+        background-color: #fcfcfc;
+      }
+      html.dark .grid-background {
+        background-image:
+            linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+        background-color: #1a1a1a;
+      }
+
+      .quran-background {
+        background-color: #f7f3e9;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+      html.dark .quran-background {
+        background-color: #1a160d;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23FBBF24' fill-opacity='0.08'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      }
+      
+      /* Page transitions */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+
+    </style>
+     <script>
+      // Basic dark mode handling to prevent FOUC
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.12.0",
+    "react-markdown": "https://esm.sh/react-markdown@^10.1.0",
+    "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^15.6.1/",
+    "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@^15.6.1",
+    "remark-gfm": "https://esm.sh/remark-gfm@^4.0.1",
+    "remark-math": "https://esm.sh/remark-math@^6.0.0",
+    "rehype-katex": "https://esm.sh/rehype-katex@^7.0.1",
+    "rehype-raw": "https://esm.sh/rehype-raw@^7.0.0",
+    "mammoth": "https://esm.sh/mammoth@^1.7.2",
+    "chart.js": "https://esm.sh/chart.js@^4.4.3",
+    "react-chartjs-2": "https://esm.sh/react-chartjs-2@^5.2.0",
+    "firebase/app": "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js",
+    "firebase/": "https://esm.sh/firebase@^12.1.0/",
+    "mermaid": "https://esm.sh/mermaid@10",
+    "qrcode": "https://esm.sh/qrcode@^1.5.3"
+  }
+}
+</script>
+</head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
