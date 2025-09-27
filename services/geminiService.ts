@@ -1,9 +1,9 @@
-import { GoogleGenAI, Type, GenerateContentResponse, Part } from "@google/genai";
+import { GoogleGenAI, Type, GenerateContentResponse, Part, GenerateImagesResponse } from "@google/genai";
 import mammoth from 'mammoth';
 import { MODELS } from '../constants';
 import { ModelId, ThinkingMode } from '../types';
 
-// FIX: Hardcode the API keys directly as requested by the user.
+// API keys are hardcoded as requested.
 const API_KEYS = [
   "AIzaSyBXFDNpFGI6mVAGO1AgxewWSOBOfoJm28g",
   "AIzaSyCvH1cc0OQUla0xfENcCBCLeV5ey11UevY",
@@ -96,7 +96,7 @@ export const processFilesForApi = async (files: File[]): Promise<Part[]> => {
     return fileParts;
 };
 
-// FIX: Update thinking config to align with guidelines (omit for general tasks).
+// Updated thinking config to align with guidelines (omit for general tasks).
 const getThinkingConfig = (thinkingMode: ThinkingMode, modelId: ModelId, isDeepThinkingEnabled: boolean) => {
     if (isDeepThinkingEnabled && (modelId === ModelId.QUALITY || modelId === ModelId.RESEARCHER)) {
         return {}; // Enable full thinking for deep thinking tasks
@@ -139,11 +139,12 @@ export const generateContentStream = async (
     config: {
       systemInstruction: systemInstruction,
       tools: isWebSearchEnabled ? [{ googleSearch: {} }] : [],
+      // FIX: Apply thinking config only to gemini-2.5-flash model as per guidelines.
       ...(model.geminiModel === 'gemini-2.5-flash' ? getThinkingConfig(ThinkingMode.BALANCED, modelId, isDeepThinkingEnabled) : {})
     }
   });
 
-  // FIX: Explicitly type the return value of callApi to ensure type safety for streaming responses.
+  // Explicitly type the return value of callApi to ensure type safety for streaming responses.
   return callApi<AsyncGenerator<GenerateContentResponse>>(apiCallGenerator);
 };
 
@@ -160,7 +161,7 @@ export const generateSimpleText = async (modelId: ModelId, prompt: string, syste
         }
     });
 
-    // FIX: Explicitly type the return value of callApi to resolve 'unknown' type errors.
+    // Explicitly type the return value of callApi to resolve 'unknown' type errors.
     const response = await callApi<GenerateContentResponse>(apiCallGenerator);
     return response.text;
 }
@@ -180,7 +181,7 @@ export const generateStructuredContent = async (modelId: ModelId, prompt: string
         }
     });
     
-    // FIX: Explicitly type the return value of callApi and remove redundant type annotation.
+    // Explicitly type the return value of callApi.
     const response = await callApi<GenerateContentResponse>(apiCallGenerator);
 
     try {
@@ -222,4 +223,23 @@ export const executeResearch = async (topic: string, plan: string[], history: an
     اتبع بدقة التعليمات الموجودة في "سير عمل البحث" لإنشاء تقريرك النهائي.`;
     const userContentForApi = { role: 'user', parts: [{ text: executionPrompt }] };
     return generateContentStream(ModelId.RESEARCHER, userContentForApi, history, true, true);
+};
+
+export const generateImage = async (prompt: string): Promise<string> => {
+    const apiCallGenerator = (ai_instance: GoogleGenAI) => ai_instance.models.generateImages({
+        model: 'imagen-4.0-generate-001',
+        prompt: prompt,
+        config: {
+            numberOfImages: 1,
+            outputMimeType: 'image/png',
+        },
+    });
+
+    // FIX: Explicitly type the response to avoid accessing properties on an 'unknown' type.
+    const response = await callApi<GenerateImagesResponse>(apiCallGenerator);
+    if (response.generatedImages && response.generatedImages[0]) {
+        const base64ImageBytes = response.generatedImages[0].image.imageBytes;
+        return `data:image/png;base64,${base64ImageBytes}`;
+    }
+    throw new Error("Image generation failed or returned no images.");
 };

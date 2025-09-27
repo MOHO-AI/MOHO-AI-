@@ -1,7 +1,8 @@
 {
   "requestFramePermissions": [
-    "microphone"
+    "microphone",
+    "geolocation"
   ],
-  "name": "MOHO AI × التعلم والتعليم",
-  "description": ""
+  "name": "MOHO AI × التعلم والتعليم × نور الإسلام",
+  "description": "MOHO AI PRO × التعلم والتعليم × نور الإسلام"
 }

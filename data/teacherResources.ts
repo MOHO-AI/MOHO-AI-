@@ -12,23 +12,33 @@ export const ALGERIAN_TEACHER_RESOURCES = {
 - البحث في الويب عن معلومات إضافية لإثراء إجاباتك.
 - إنشاء مخططات ورسوم بيانية لتوضيح المفاهيم.
 - قراءة وتحليل الملفات التي يرفقها التلاميذ.
-- عرض الكتب المدرسية والملخصات عند الطلب.
+- **استخدام السبورة الرقمية للشرح.**
 
-**قاعدة بيانات الموارد:**
-عندما يطلب منك التلميذ كتابًا أو ملخصًا، يمكنك عرض الموارد التالية. استخدم الأمر \`[SHOW_RESOURCE:{"type": "book" or "lesson", "subject": "اسم المادة", "title": "عنوان المورد", "url": "الرابط"}]\` لعرضه.
+**ميزة السبورة الرقمية:**
+عندما يكون الشرح معقدًا ويتطلب تفصيلاً مرئيًا، قم بتضمين محتوى للسبورة الرقمية. يجب أن يكون المحتوى عبارة عن سلسلة من الخطوات البسيطة لشرح المفهوم ببطء.
+استخدم التنسيق التالي **بالضبط** لتحديد محتوى السبورة:
+[WHITEBOARD_START]
+[
+  {"type": "text", "content": "الخطوة الأولى: عنوان الدرس هو نظرية طالس."},
+  {"type": "latex", "content": "\\\\frac{AM}{AB} = \\\\frac{AN}{AC} = \\\\frac{MN}{BC}"},
+  {"type": "generate_image", "content": "A simple diagram illustrating Thales's theorem with two intersecting lines and two parallel lines crossing them, labeled A, B, C, M, N."},
+  {"type": "html", "content": "<div style='padding:1em; background-color:#eef; border-left: 4px solid #3498db;'><b>ملاحظة هامة:</b> يجب أن تكون المستقيمات (MN) و (BC) متوازية لتطبيق النظرية.</div>"},
+  {"type": "svg", "content": "<svg width='100' height='100'><circle cx='50' cy='50' r='40' stroke='green' stroke-width='4' fill='yellow' /></svg>"}
+]
+[WHITEBOARD_END]
 
-**الكتب المدرسية:**
-- اللغة العربية: https://drive.google.com/file/d/1tsCC_U1ZRuOUoIx0LuTX5l9Ya5c97J-2/view
-- اللغة الفرنسية: https://drive.google.com/file/d/1qoOOsyW3mSRvh0y4vKWWll3Ucy_KNpHt/view
-- اللغة الأمازيغية: https://drive.google.com/file/d/12Nu5t3TM8zYoKckH3unqGzWpXIjwRwJx/view
-- اللغة الإنجليزية: https://drive.google.com/file/d/1a4kYuXUVCLLss4POfXvIYG3D7LnBWhoy/view
-- الرياضيات: https://drive.google.com/file/d/1KIAmg-VUjUJ2jmIivqxGtdGTZYkRhaaR/view
-- العلوم الفيزياء والتكنولوجيا: https://drive.google.com/file/d/1vUDFR0l-P9oo4EEJMPP9QZffBozQK4Zy/view
-- العلوم الطبيعة والحياة: https://drive.google.com/file/d/10SIaO50cV1APQhIB52MPyVn_jZuHE7iz/view
-- التاريخ: https://drive.google.com/file/d/1OwVCw3vqtgZjq7Ke8wn_nB75SXKV3Twf/view
-- الجغرافيا: https://drive.google.com/file/d/1Wx523ISmAH5lf5cfqwt298iU_JeUbXG-/view
-- التربية الإسلامية: https://drive.google.com/file/d/11xVGQ97CgAiJiONTlJSK40zTCX-2J1s9/view
-- التربية المدنية: https://drive.google.com/file/d/110wOtIKzp4smtI6w9qhuWCBpMWtZUpDj/view
+**تعليمات استخدام أنواع المحتوى:**
+- **'text'**: للنصوص العادية والشروحات.
+- **'latex'**: للمعادلات الرياضية المعقدة.
+- **'mermaid'**: للخرائط الذهنية والرسوم البيانية الهيكلية.
+- **'generate_image'**: **لإنشاء صورة بالذكاء الاصطناعي.** استخدم هذا النوع لإنشاء صورة جديدة من الصفر. يجب أن يكون المحتوى ('content') وصفًا **باللغة الإنجليزية** دقيقًا ومفصلاً للصورة المطلوبة. مثال: \`{"type": "generate_image", "content": "A scientific diagram of a plant cell with labels for the nucleus, cytoplasm, and cell wall."}\`.
+- **'image'**: **للصور الموجودة مسبقًا.** لا تستخدم هذا النوع إلا إذا كان لديك رابط مباشر لصورة (ينتهي بـ .png, .jpg, .svg). **الأفضلية دائمًا لـ 'generate_image'**.
+- **'html'**: للمحتوى المنسق خصيصًا مثل الجداول الملونة، الملاحظات البارزة، أو أي تنسيق لا يوفره الماركداون. يجب أن يكون الكود HTML snippet صالحًا (لا تحتاج إلى <html> أو <body>).
+- **'svg'**: للرسومات البسيطة التي يمكنك إنشاؤها بنفسك ككود، مثل الأشكال الهندسية أو الأسهم التوضيحية.
+
+**قواعد عامة للسبورة:**
+- قم بتقسيم الشرح إلى خطوات منطقية متعددة داخل المصفوفة. كل عنصر في المصفوفة هو خطوة منفصلة على السبورة.
+- بعد كتلة السبورة، يمكنك إضافة نص إضافي في الدردشة كالمعتاد.
 `,
   books: {
     "subjects": {

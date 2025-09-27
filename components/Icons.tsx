@@ -62,12 +62,17 @@ export const PaperclipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =>
     </svg>
 );
 
-// FIX: Replace BrainIcon SVG with the new design provided by the user.
 export const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <circle cx="12" cy="12" r="1" strokeDasharray="3 3" />
-        <ellipse cx="12" cy="12" rx="10" ry="5" strokeDasharray="3 3" />
-        <ellipse cx="12" cy="12" rx="5" ry="10" strokeDasharray="3 3" />
+        <path d="M9.5 8.5c.9-2.1 2.4-3.8 4.2-4.9" />
+        <path d="M14.5 8.5c-.9-2.1-2.4-3.8-4.2-4.9" />
+        <path d="M9.5 15.5c.9 2.1 2.4 3.8 4.2 4.9" />
+        <path d="M14.5 15.5c-.9 2.1-2.4-3.8-4.2-4.9" />
+        <path d="M17 11c1.2-1.2 2-2.9 2-4.9" />
+        <path d="M7 11c-1.2-1.2-2-2.9-2-4.9" />
+        <path d="M17 13c1.2 1.2 2 2.9 2 4.9" />
+        <path d="M7 13c-1.2 1.2-2 2.9-2 4.9" />
+        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
     </svg>
 );
 
@@ -130,7 +135,6 @@ export const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-// Keep existing icons as functional components for consistency
 export const CopyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
@@ -346,7 +350,6 @@ export const QrCodeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     </svg>
 );
 
-// FIX: Add missing ClockIcon.
 export const ClockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <circle cx="12" cy="12" r="10" />
@@ -400,5 +403,137 @@ export const ChartBarIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 export const MessageSquareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+);
+
+export const WhiteboardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <rect x="3" y="3" width="18" height="12" rx="2" ry="2"/>
+        <line x1="12" y1="15" x2="12" y2="21"/>
+        <line x1="9" y1="21" x2="15" y2="21"/>
+        <path d="M7 8h4"/>
+        <path d="M13 11h4"/>
+    </svg>
+);
+
+export const CalculatorIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <rect x="4" y="2" width="16" height="20" rx="2" ry="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="12" y1="10" x2="12" y2="18" />
+        <line x1="8" y1="14" x2="16" y2="14" />
+    </svg>
+);
+
+
+// Noor Al-Islam App Icons (as requested by user)
+export const NoorAlIslamIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://cdn-icons-png.flaticon.com/128/4434/4434277.png" alt="Noor Al-Islam App Icon" {...props} />
+);
+export const PrayerTimeIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://cdn-icons-png.freepik.com/512/4799/4799749.png" alt="Prayer Times Icon" {...props} />
+);
+export const IslamicCalendarIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://static.thenounproject.com/png/islam-icon-5189187-512.png" alt="Islamic Calendar Icon" {...props} />
+);
+export const HadithIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://cdn-icons-png.freepik.com/512/18166/18166802.png" alt="Hadith Icon" {...props} />
+);
+export const QuranFeatureIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://cdn-icons-png.flaticon.com/128/2717/2717864.png" alt="Quran Icon" {...props} />
+);
+
+// Weather App Icons
+export const WeatherAppIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://maps.gstatic.com/weather/v1/mostly_sunny.svg" alt="Weather App Icon" {...props} />
+);
+export const CloudIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+    </svg>
+);
+export const CloudRainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" />
+        <line x1="8" y1="18" x2="8" y2="18" />
+        <line x1="12" y1="20" x2="12" y2="20" />
+        <line x1="16" y1="18" x2="16" y2="18" />
+    </svg>
+);
+export const CloudLightningIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" />
+        <polyline points="13 11 9 17 15 17 11 23" />
+    </svg>
+);
+export const CloudSnowIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M20 17.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25" />
+        <line x1="8" y1="16" x2="8" y2="16" />
+        <line x1="8" y1="20" x2="8" y2="20" />
+        <line x1="12" y1="18" x2="12" y2="18" />
+        <line x1="12" y1="22" x2="12" y2="22" />
+        <line x1="16" y1="16" x2="16" y2="16" />
+        <line x1="16" y1="20" x2="16" y2="20" />
+    </svg>
+);
+export const WindIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M9.59 4.59A2 2 0 1 1 11 8H2" />
+        <path d="M12.59 11.41A2 2 0 1 1 14 16H2" />
+        <path d="M14.59 18.41A2 2 0 1 1 16 22H2" />
+    </svg>
+);
+export const CloudSunIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 16.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9z" />
+        <path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m4.93 19.07 1.41-1.41" /><path d="m17.66 6.34 1.41-1.41" />
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+    </svg>
+);
+export const CloudMoonIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+    </svg>
+);
+export const ThermometerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4 4 0 1 0 5 0z" />
+    </svg>
+);
+export const SunriseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 2v8" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m17.66 12.34 1.41-1.41" /><path d="M22 22H2" /><path d="M8 6l4-4 4 4" />
+    </svg>
+);
+export const SunsetIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 10V2" /><path d="m4.93 10.93 1.41 1.41" /><path d="M2 18h2" /><path d="M20 18h2" /><path d="m17.66 12.34 1.41-1.41" /><path d="M22 22H2" /><path d="m16 6-4 4-4-4" />
+    </svg>
+);
+export const CompassIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+    </svg>
+);
+export const GaugeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0-18 0"/>
+        <path d="M12 12v-4"/>
+        <path d="M22 12h-4"/>
+        <path d="M2 12h4"/>
+    </svg>
+);
+export const DropletIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z" />
+    </svg>
+);
+export const EyeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+        <circle cx="12" cy="12" r="3" />
     </svg>
 );

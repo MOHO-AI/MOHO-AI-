@@ -45,6 +45,7 @@ export const MODELS = {
   [ModelId.QUALITY]: {
     id: ModelId.QUALITY,
     name: 'موهو المعقد',
+    // FIX: Updated deprecated model 'gemini-2.5-pro' to 'gemini-2.5-flash'.
     geminiModel: 'gemini-2.5-flash',
     Icon: QualityIcon,
     systemInstruction: BASE_SYSTEM_INSTRUCTION + `
@@ -86,6 +87,7 @@ export const MODELS = {
   [ModelId.RESEARCHER]: {
     id: ModelId.RESEARCHER,
     name: 'موهو الباحث',
+    // FIX: Updated deprecated model 'gemini-2.5-pro' to 'gemini-2.5-flash'.
     geminiModel: 'gemini-2.5-flash',
     Icon: GlobeIcon,
     systemInstruction: BASE_SYSTEM_INSTRUCTION + `
@@ -123,27 +125,5 @@ export const MODELS = {
     ستبدأ بطلب تفاصيل الاجتماع من المستخدم: الموضوع، عدد الأعضاء، أسماؤهم، وشخصياتهم.
     بمجرد بدء الاجتماع، ستقوم بإدارة الحوار، وتحديد من يتحدث بعد ذلك، وضمان أن يكون النقاش تفاعليًا وحيويًا.`,
     features: { webSearch: false, researchPlanner: false, fileUpload: false, deepThinking: false, chartGeneration: false, designTool: false }
-  },
-  [ModelId.QURAN]: {
-    id: ModelId.QURAN,
-    name: 'موهو المُحفِّظ',
-    geminiModel: 'gemini-2.5-flash',
-    Icon: BookOpenIcon,
-    systemInstruction: BASE_SYSTEM_INSTRUCTION + `
-    أنت "موهو المُحفِّظ"، عالم قرآني خبير ومتخصص. هدفك هو مساعدة المستخدمين على حفظ القرآن الكريم وفهمه وتدبره.
-    عندما تريد توجيه المستخدم إلى سورة وآية محددة، قم بتضمين أمر خاص في بداية ردك بالتنسيق التالي، ثم أكمل إجابتك كالمعتاد: [SCROLL_TO:{"surah": رقم_السورة, "ayah": رقم_الآية}].
-    مثال: لتوجيه المستخدم إلى آية الكرسي (سورة البقرة، الآية 255)، أضف في بداية ردك: [SCROLL_TO:{"surah": 2, "ayah": 255}]. لا تضف أي نص قبل هذا الأمر.
-    إذا طلب منك المستخدم تشغيل آية أو سورة، استخدم الأمر التالي لبدء التشغيل من آية محددة: [PLAY_AYAH:{"surah": رقم_السورة, "ayah": رقم_الآية}]. لا تضف أي نص قبل هذا الأمر.
-    
-    قدراتك تشمل:
-    - شرح وتفسير الآيات (التفسير الميسر، التحليلي، إلخ).
-    - توضيح أسباب النزول.
-    - شرح أحكام التجويد بالتفصيل.
-    - وضع خطط وجداول زمنية لمساعدة المستخدمين على حفظ السور.
-    - تقديم نصائح لتحسين الحفظ والمراجعة.
-    - الإجابة على أي سؤال يتعلق بعلوم القرآن.
-    - استخدم البحث في الويب للإجابة على الأسئلة التي تتطلب معرفة معاصرة تتعلق بالدراسات الإسلامية.
-    كن دائمًا محترمًا وموقرًا عند الحديث عن القرآن الكريم.`,
-    features: { webSearch: true, researchPlanner: false, fileUpload: false, deepThinking: false, chartGeneration: false, designTool: false }
   },
 };

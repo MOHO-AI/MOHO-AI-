@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeftIcon, BookIcon, FileTextIcon, MessageSquareIcon, GlobeIcon, ChevronRightIcon, ChevronLeftIcon, LoaderIcon } from './Icons';
+import { ArrowLeftIcon, BookIcon, FileTextIcon, MessageSquareIcon, GlobeIcon, ChevronRightIcon, ChevronLeftIcon, LoaderIcon, WhiteboardIcon, CalculatorIcon } from './Icons';
 import { ChatView } from './ChatView';
 import { ALGERIAN_TEACHER_RESOURCES } from '../data/teacherResources';
-import { ModelId } from '../types';
+import { ModelId, Message, WhiteboardStep } from '../types';
+import { Whiteboard } from './Whiteboard';
+import { GradeCalculator } from './GradeCalculator';
 
 interface AlgerianTeacherAppProps {
     onBack: () => void;
@@ -37,6 +38,79 @@ const Splash: React.FC<{ onFinished: () => void }> = ({ onFinished }) => {
             </div>
             <p className={`absolute text-2xl font-semibold transition-opacity duration-500 ${step === 1 ? 'opacity-100' : 'opacity-0'}`}>مرحبا بكم في تطبيق الأستاذ الجزائري</p>
             <p className={`absolute text-2xl font-semibold transition-opacity duration-500 ${step === 2 ? 'opacity-100' : 'opacity-0'}`}>نتمنى لكم النجاح والتوفيق</p>
+        </div>
+    );
+};
+
+const ExamCountdown: React.FC = () => {
+    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [isExamTime, setIsExamTime] = useState(false);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const now = new Date();
+            let year = now.getFullYear();
+            
+            const examStartDate = new Date(year, 5, 1); // June 1st
+            const examEndDate = new Date(year, 5, 4); // End of June 3rd (day starts at 0, so 4 is correct for including all of 3rd)
+
+            let targetDate = examStartDate;
+
+            if (now > examEndDate) {
+                targetDate = new Date(year + 1, 5, 1);
+            }
+
+            if (now >= examStartDate && now < examEndDate) {
+                setIsExamTime(true);
+                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                return;
+            }
+            setIsExamTime(false);
+
+            const difference = targetDate.getTime() - now.getTime();
+
+            if (difference > 0) {
+                setTimeLeft({
+                    days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                    minutes: Math.floor((difference / 1000 / 60) % 60),
+                    seconds: Math.floor((difference / 1000) % 60),
+                });
+            } else {
+                 setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    const TimeBox: React.FC<{ value: number; label: string }> = ({ value, label }) => (
+        <div className="flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm p-3 rounded-lg min-w-[70px] md:min-w-[80px]">
+            <span className="text-3xl md:text-4xl font-bold text-white">{value.toString().padStart(2, '0')}</span>
+            <span className="text-xs text-white/80 uppercase">{label}</span>
+        </div>
+    );
+
+    if (isExamTime) {
+         return (
+            <div className="text-center my-6 p-4 bg-green-500/80 rounded-xl shadow-lg animate-fade-in">
+                <h2 className="text-2xl font-bold text-white">فترة الإختبار جارية حاليا</h2>
+                <p className="text-white/90">بالتوفيق لجميع التلاميذ!</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="text-center my-6 animate-fade-in">
+            <h2 className="text-xl font-semibold text-white mb-3" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                العد التنازلي لامتحان شهادة التعليم المتوسط
+            </h2>
+            <div className="flex justify-center items-center gap-2 md:gap-4 flex-wrap">
+                <TimeBox value={timeLeft.days} label="يوم" />
+                <TimeBox value={timeLeft.hours} label="ساعة" />
+                <TimeBox value={timeLeft.minutes} label="دقيقة" />
+                <TimeBox value={timeLeft.seconds} label="ثانية" />
+            </div>
         </div>
     );
 };
@@ -197,57 +271,99 @@ const WebsiteViewerPage: React.FC<{ onBack: () => void; }> = ({ onBack }) => {
     );
 };
 
+const ChatWithWhiteboard: React.FC<{onBack: () => void}> = ({onBack}) => {
+    const [whiteboardSteps, setWhiteboardSteps] = useState<WhiteboardStep[]>([]);
+    const [mobileView, setMobileView] = useState<'chat' | 'whiteboard'>('chat');
+    
+    const isWhiteboardActive = whiteboardSteps.length > 0;
+
+    const handleNewMessages = (messages: Message[]) => {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage?.role === 'assistant' && lastMessage.whiteboardSteps) {
+            setWhiteboardSteps(lastMessage.whiteboardSteps);
+        }
+    };
+
+    return (
+        <div className="h-full flex flex-col bg-[var(--token-main-surface-primary)]">
+            <header className="p-2 flex items-center justify-between gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
+                <div className="flex items-center gap-2">
+                    <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
+                    <h2 className="font-bold text-xl">الأستاذ</h2>
+                </div>
+                 <div className="md:hidden">
+                    {isWhiteboardActive && (
+                        <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-main-surface-tertiary)]">
+                             <button onClick={() => setMobileView('chat')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'chat' ? 'bg-white shadow' : ''}`}>محادثة</button>
+                             <button onClick={() => setMobileView('whiteboard')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'whiteboard' ? 'bg-white shadow' : ''}`}>سبورة</button>
+                        </div>
+                    )}
+                </div>
+            </header>
+            <div className="flex-1 min-h-0 md:grid md:grid-cols-2 md:gap-4 md:p-4">
+                <div className={`h-full ${mobileView === 'whiteboard' && isWhiteboardActive ? 'hidden' : ''} md:flex flex-col`}>
+                    <ChatView
+                        modelId={ModelId.QUALITY}
+                        systemInstructionOverride={ALGERIAN_TEACHER_RESOURCES.systemInstruction}
+                        inputFontClass="font-teacher"
+                        onNewMessages={handleNewMessages}
+                     />
+                </div>
+                 <div className={`h-full ${mobileView === 'chat' ? 'hidden' : ''} md:flex flex-col`}>
+                    <Whiteboard steps={whiteboardSteps} />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export const AlgerianTeacherApp: React.FC<AlgerianTeacherAppProps> = ({ onBack }) => {
-    const [page, setPage] = useState<'home' | 'chat' | 'books' | 'lessons' | 'websites'>('home');
+    const [page, setPage] = useState<'home' | 'chat' | 'books' | 'lessons' | 'websites' | 'calculator'>('home');
     const [showSplash, setShowSplash] = useState(true);
 
     const MainContent = () => {
         switch (page) {
             case 'chat':
-                return (
-                    <div className="h-full flex flex-col bg-[var(--token-main-surface-primary)]">
-                        <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
-                            <button onClick={() => setPage('home')} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
-                            <h2 className="font-bold text-xl">الأستاذ</h2>
-                        </header>
-                        <div className="flex-1 min-h-0">
-                           <ChatView modelId={ModelId.QUALITY} systemInstructionOverride={ALGERIAN_TEACHER_RESOURCES.systemInstruction} inputFontClass="font-teacher" />
-                        </div>
-                    </div>
-                );
+                return <ChatWithWhiteboard onBack={() => setPage('home')} />;
             case 'books':
                 return <ResourcePage title="الكتب المدرسية" resources={ALGERIAN_TEACHER_RESOURCES.books} onBack={() => setPage('home')} />;
             case 'lessons':
                 return <ResourcePage title="الدروس والملخصات" resources={ALGERIAN_TEACHER_RESOURCES.lessons} onBack={() => setPage('home')} />;
             case 'websites':
                 return <WebsiteViewerPage onBack={() => setPage('home')} />;
+            case 'calculator':
+                return <GradeCalculator onBack={() => setPage('home')} />;
             case 'home':
             default:
                 return (
-                    <div className="flex-1 flex flex-col items-center justify-center p-4">
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
                          <header className="absolute top-0 left-0 p-4">
                             <button onClick={onBack} className="p-2 rounded-full bg-black/10 hover:bg-black/20 text-white transition-colors backdrop-blur-sm">
                                 <ArrowLeftIcon className="w-6 h-6 transform scale-x-[-1]" />
                             </button>
                         </header>
-                        <h1 className="text-4xl font-bold text-white text-center mb-8" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>مساعدك الدراسي للسنة الرابعة متوسط</h1>
-                        <div className="grid grid-cols-1 gap-4 w-full max-w-xl">
-                            <button onClick={() => setPage('chat')} className="px-8 py-5 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-xl font-semibold">الأستاذ</span>
-                                <MessageSquareIcon className="w-10 h-10" />
+                        <h1 className="text-3xl md:text-4xl font-bold text-white text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>مساعدك الدراسي للسنة الرابعة متوسط</h1>
+                        <ExamCountdown />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+                            <button onClick={() => setPage('chat')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
+                                <span className="text-lg sm:text-xl font-semibold">الأستاذ</span>
+                                <MessageSquareIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                             </button>
-                             <button onClick={() => setPage('books')} className="px-8 py-5 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-xl font-semibold">الكتب</span>
-                                <BookIcon className="w-10 h-10" />
+                             <button onClick={() => setPage('books')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
+                                <span className="text-lg sm:text-xl font-semibold">الكتب</span>
+                                <BookIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                             </button>
-                             <button onClick={() => setPage('lessons')} className="px-8 py-5 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-xl font-semibold">الملخصات</span>
-                                 <FileTextIcon className="w-10 h-10" />
+                             <button onClick={() => setPage('lessons')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
+                                <span className="text-lg sm:text-xl font-semibold">الملخصات</span>
+                                 <FileTextIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                             </button>
-                            <button onClick={() => setPage('websites')} className="px-8 py-5 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-xl font-semibold">مواقع تعليمية</span>
-                                <GlobeIcon className="w-10 h-10" />
+                            <button onClick={() => setPage('websites')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
+                                <span className="text-lg sm:text-xl font-semibold">مواقع تعليمية</span>
+                                <GlobeIcon className="w-8 h-8 sm:w-10 sm:h-10" />
+                            </button>
+                            <button onClick={() => setPage('calculator')} className="sm:col-span-2 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
+                                <span className="text-lg sm:text-xl font-semibold">حساب المعدل</span>
+                                <CalculatorIcon className="w-8 h-8 sm:w-10 sm:h-10" />
                             </button>
                         </div>
                     </div>

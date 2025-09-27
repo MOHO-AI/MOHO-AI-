@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { generateContentStream, getResearchPlan, executeResearch, processFilesForApi } from '../services/geminiService';
+import { generateContentStream, getResearchPlan, executeResearch, processFilesForApi, generateImage } from '../services/geminiService';
 import type { GenerateContentResponse } from '@google/genai';
 import { MODELS } from '../constants';
-import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking } from '../types';
+import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking, WhiteboardStep } from '../types';
 import { MessageRenderer } from './MessageRenderer';
 import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, BrainIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon } from './Icons';
 import QRCode from 'qrcode';
@@ -26,6 +26,7 @@ interface ChatViewProps {
   clearInitialPrompt?: () => void;
   systemInstructionOverride?: string;
   inputFontClass?: string;
+  onNewMessages?: (messages: Message[]) => void;
 }
 
 const ForwardModal: React.FC<{
@@ -41,7 +42,8 @@ const ForwardModal: React.FC<{
                 </div>
                 <div className="p-2">
                     {Object.values(MODELS)
-                        .filter(model => model.id !== currentModelId && model.id !== ModelId.QURAN)
+                        // FIX: Filter out the SOCIAL model as it has a different flow and cannot be forwarded to.
+                        .filter(model => model.id !== currentModelId && model.id !== ModelId.SOCIAL)
                         .map(model => (
                             <button
                                 key={model.id}
@@ -107,6 +109,7 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
     let chartData: ChartData | null = null;
     let deepThinking: DeepThinking | null = null;
     let designContent: string | null = null;
+    let whiteboardSteps: WhiteboardStep[] | null = null;
     const mermaidCodes: string[] = [];
 
     // QR Code
@@ -163,6 +166,33 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
              content = `**[DEEP_THINKING_START]**\n${dtBlock}\n**[DEEP_THINKING_END]**\n` + content;
         }
     }
+    
+    // Whiteboard - find all blocks, parse them, and replace if all are valid
+    const whiteboardRegex = /\[WHITEBOARD_START\]\s*([\s\S]*?)\s*\[WHITEBOARD_END\]/g;
+    const whiteboardMatches = [...content.matchAll(whiteboardRegex)];
+    if (whiteboardMatches.length > 0) {
+        const tempSteps: WhiteboardStep[] = [];
+        let parsingFailed = false;
+        for (const match of whiteboardMatches) {
+            const jsonString = match[1].trim();
+            try {
+                const parsed = JSON.parse(jsonString);
+                if (Array.isArray(parsed)) {
+                    // Flatten to handle cases where the model might wrap the array in another array, e.g., [[...]]
+                    tempSteps.push(...parsed.flat()); 
+                }
+            } catch (e) {
+                parsingFailed = true;
+                console.warn("Incomplete or invalid whiteboard JSON, will retry on next chunk.", e);
+                break; // Stop parsing if any block is invalid, assuming it's an incomplete stream.
+            }
+        }
+
+        if (!parsingFailed && tempSteps.length > 0) {
+            whiteboardSteps = tempSteps;
+            content = content.replace(whiteboardRegex, '').trim();
+        }
+    }
 
     // Design
     designContent = extractBlock(/```html:design\n([\s\S]*?)\n```/);
@@ -175,7 +205,7 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         content = content.replace(mermaidRegex, '');
     }
     
-    return { content, chartData, deepThinking, designContent, mermaidCodes, qrCodeSVG };
+    return { content, chartData, deepThinking, designContent, mermaidCodes, qrCodeSVG, whiteboardSteps };
 };
 
 
@@ -191,6 +221,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     clearInitialPrompt,
     systemInstructionOverride,
     inputFontClass,
+    onNewMessages,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -214,10 +245,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const recognitionRef = useRef<any>(null);
   const stopGenerationRef = useRef(false);
   const messagesRef = useRef(messages);
+  const processedWhiteboardRef = useRef(new Set());
   
   useEffect(() => {
     messagesRef.current = messages;
-  }, [messages]);
+    onNewMessages?.(messages);
+  }, [messages, onNewMessages]);
 
   useEffect(() => {
     if (initialPrompt && clearInitialPrompt) {
@@ -469,7 +502,42 @@ export const ChatView: React.FC<ChatViewProps> = ({
         
         if (parsedData.designContent && setDesignContent) setDesignContent(parsedData.designContent);
 
-        setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, ...parsedData, sources } : m));
+        if (parsedData.whiteboardSteps && !processedWhiteboardRef.current.has(assistantMessageId)) {
+            processedWhiteboardRef.current.add(assistantMessageId);
+            (async () => {
+                const finalSteps = await Promise.all(
+                    // FIX: Add explicit return type to the map callback to ensure correct type inference for finalSteps.
+                    parsedData.whiteboardSteps!.map(async (step): Promise<WhiteboardStep> => {
+                        if (step.type === 'generate_image') {
+                            try {
+                                const imageUrl = await generateImage(step.content);
+                                return { type: 'image', content: imageUrl };
+                            } catch (e) {
+                                console.error('Image generation failed for prompt:', step.content, e);
+                                return { type: 'text', content: `**[فشل إنشاء الصورة]**\n_الموجه: "${step.content}"_` };
+                            }
+                        }
+                        return step;
+                    })
+                );
+                setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, whiteboardSteps: finalSteps } : m));
+            })();
+        }
+
+        setMessages(prev => prev.map(m => {
+            if (m.id === assistantMessageId) {
+                const updatedMessage = { ...m, ...parsedData, sources };
+                if (parsedData.whiteboardSteps) {
+                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map(step => 
+                        step.type === 'generate_image' 
+                            ? { type: 'image_loading', content: step.content } 
+                            : step
+                    );
+                }
+                return updatedMessage;
+            }
+            return m;
+        }));
       }
 
     } catch (error) {
@@ -554,6 +622,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const handleNewChat = () => {
     if (messages.length > 0 && window.confirm("هل أنت متأكد أنك تريد بدء محادثة جديدة؟ سيتم مسح المحادثة الحالية.")) {
         setMessages([]);
+        processedWhiteboardRef.current.clear();
     }
   }
   
@@ -599,7 +668,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         setEditingMessageId={setEditingMessageId}
                         onEditMessage={handleEditMessage}
                         onExecuteResearch={modelId === ModelId.RESEARCHER ? handleExecuteResearch : undefined}
-                        onForward={modelId !== ModelId.QURAN ? setForwardingContent : undefined}
+                        // FIX: Disable forwarding when the onModelChangeAndSetPrompt callback is not provided.
+                        onForward={onModelChangeAndSetPrompt ? setForwardingContent : undefined}
                         isStreaming={isLoading && msg.role === 'assistant' && index === messages.length - 1}
                     />
                 ))
