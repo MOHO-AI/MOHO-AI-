@@ -537,3 +537,30 @@ export const EyeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
         <circle cx="12" cy="12" r="3" />
     </svg>
 );
+
+export const WeatherConditionIcon: React.FC<{ icon: string, className?: string }> = ({ icon, className }) => {
+    const icons: { [key: string]: React.FC<any> } = {
+        'sunny': SunIcon,
+        'clear-night': MoonIcon,
+        'partly-cloudy-day': CloudSunIcon,
+        'partly-cloudy-night': CloudMoonIcon,
+        'cloudy': CloudIcon,
+        'rain': CloudRainIcon,
+        'snow': CloudSnowIcon,
+        'sleet': CloudSnowIcon,
+        'wind': WindIcon,
+        'fog': CloudIcon,
+        'thunderstorm': CloudLightningIcon,
+    };
+    const key = Object.keys(icons).find(k => icon.includes(k));
+    const IconComponent = icons[key || 'cloudy'];
+    return <IconComponent className={className} />;
+};
+
+export const GoogleIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://www.gstatic.com/marketing-cms/assets/images/55/41/31f5467e442aa423fc6dfc9930fd/g-about-gatg.png=n-w64-h65-fcrop64=1,000005f5ffffffff-rw" alt="Google Icon" {...props} />
+);
+
+export const AppStoreIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://cdn-icons-png.flaticon.com/512/11488/11488499.png" alt="App Stores Icon" {...props} />
+);

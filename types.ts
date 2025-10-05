@@ -68,6 +68,7 @@ export interface Message {
   qrCodeSVG?: string | null;
   callStatus?: 'calling' | 'completed' | null;
   whiteboardSteps?: WhiteboardStep[];
+  statusWidget?: { type: 'weather' | 'prayer' } | null;
 }
 
 export interface WhiteboardStep {

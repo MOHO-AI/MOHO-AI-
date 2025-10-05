@@ -1,31 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ArrowLeftIcon, LoaderIcon, SunIcon, MoonIcon, CloudIcon, CloudRainIcon, CloudSnowIcon, CloudLightningIcon, WindIcon, ThermometerIcon, SunriseIcon, SunsetIcon, CloudSunIcon, CloudMoonIcon, CompassIcon, GaugeIcon, DropletIcon, EyeIcon } from './Icons';
-import { generateStructuredContent } from '../services/geminiService';
-import { ModelId, WeatherData } from '../types';
-import { Type } from "@google/genai";
+import { ArrowLeftIcon, LoaderIcon, SunIcon, MoonIcon, WindIcon, ThermometerIcon, SunriseIcon, SunsetIcon, CompassIcon, GaugeIcon, DropletIcon, EyeIcon, WeatherConditionIcon } from './Icons';
+import { WeatherData } from '../types';
+import { fetchWeatherData } from './noor-al-islam/api';
 
 interface WeatherAppProps {
     onBack: () => void;
 }
-
-const WeatherConditionIcon: React.FC<{ icon: string, className?: string }> = ({ icon, className }) => {
-    const icons: { [key: string]: React.FC<any> } = {
-        'sunny': SunIcon,
-        'clear-night': MoonIcon,
-        'partly-cloudy-day': CloudSunIcon,
-        'partly-cloudy-night': CloudMoonIcon,
-        'cloudy': CloudIcon,
-        'rain': CloudRainIcon,
-        'snow': CloudSnowIcon,
-        'sleet': CloudSnowIcon,
-        'wind': WindIcon,
-        'fog': CloudIcon,
-        'thunderstorm': CloudLightningIcon,
-    };
-    const key = Object.keys(icons).find(k => icon.includes(k));
-    const IconComponent = icons[key || 'cloudy'];
-    return <IconComponent className={className} />;
-};
 
 const getDynamicBackground = (icon?: string, sunrise?: string, sunset?: string): string => {
     if (!icon || !sunrise || !sunset) {
@@ -112,7 +92,6 @@ const DetailCard: React.FC<{ title: string; Icon: React.FC<any>; children: React
     </div>
 );
 
-
 export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
     const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -122,68 +101,11 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
     const fetchWeather = useCallback(async (locationQuery: string) => {
         setIsLoading(true);
         setError(null);
-        
-        const systemInstruction = `You are a weather data API. You will receive a location query. Use your web search tool to find the most accurate and up-to-date weather information for that location. Respond ONLY with a valid JSON object matching the provided schema. Do not include any text, markdown formatting, or explanations before or after the JSON object. The 'condition_icon' field must be one of the following strings: 'sunny', 'clear-night', 'partly-cloudy-day', 'partly-cloudy-night', 'cloudy', 'rain', 'snow', 'sleet', 'wind', 'fog', 'thunderstorm'. Populate all fields, including optional ones like uv_index, air_quality_index, and chance_of_rain if data is available. For wind_direction, use abbreviations like N, S, E, W, NE, SW, etc.`;
-
-        const schema = {
-            type: Type.OBJECT,
-            properties: {
-                location: { type: Type.STRING },
-                current: {
-                    type: Type.OBJECT,
-                    properties: {
-                        temp_c: { type: Type.NUMBER },
-                        condition: { type: Type.STRING },
-                        condition_icon: { type: Type.STRING },
-                        feelslike_c: { type: Type.NUMBER },
-                        humidity: { type: Type.NUMBER },
-                        wind_kph: { type: Type.NUMBER },
-                        pressure_mb: { type: Type.NUMBER },
-                        vis_km: { type: Type.NUMBER },
-                        sunrise: { type: Type.STRING },
-                        sunset: { type: Type.STRING },
-                        uv_index: { type: Type.NUMBER },
-                        air_quality_index: { type: Type.NUMBER },
-                        wind_direction: { type: Type.STRING },
-                    },
-                },
-                forecast_hourly: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            time: { type: Type.STRING },
-                            temp_c: { type: Type.NUMBER },
-                            condition_icon: { type: Type.STRING },
-                            chance_of_rain: { type: Type.NUMBER },
-                        },
-                    },
-                },
-                forecast_daily: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            date: { type: Type.STRING },
-                            maxtemp_c: { type: Type.NUMBER },
-                            mintemp_c: { type: Type.NUMBER },
-                            condition: { type: Type.STRING },
-                            condition_icon: { type: Type.STRING },
-                        },
-                    },
-                },
-            },
-        };
-
         try {
-            const data: WeatherData | null = await generateStructuredContent(ModelId.ADAPTIVE, locationQuery, systemInstruction, schema);
-            if (data && data.location) {
-                setWeatherData(data);
-            } else {
-                throw new Error("لم يتم العثور على بيانات الطقس للموقع المحدد.");
-            }
+            const data = await fetchWeatherData(locationQuery);
+            setWeatherData(data);
         } catch (err: any) {
-            setError(err.message || 'فشل في جلب بيانات الطقس.');
+            setError(err.message || 'حدث خطأ غير متوقع.');
             setWeatherData(null);
         } finally {
             setIsLoading(false);
@@ -198,6 +120,8 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
             (err) => {
                 setError('يرجى السماح بالوصول إلى الموقع أو البحث عن مدينة.');
                 setIsLoading(false);
+                // Fetch a default location if geolocation fails
+                fetchWeather('Mecca');
             }
         );
     }, [fetchWeather]);

@@ -4,7 +4,7 @@ import type { GenerateContentResponse } from '@google/genai';
 import { MODELS } from '../constants';
 import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking, WhiteboardStep } from '../types';
 import { MessageRenderer } from './MessageRenderer';
-import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, BrainIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon } from './Icons';
+import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, BrainIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon, GoogleIcon } from './Icons';
 import QRCode from 'qrcode';
 
 declare global {
@@ -94,10 +94,10 @@ const createRipple = (event: React.MouseEvent<HTMLButtonElement>) => {
 };
 
 const LoadingIndicator: React.FC = () => (
-    <div className="flex space-x-2">
-        <div className="w-20 h-3 rounded-full loading-shimmer-bar"></div>
-        <div className="w-28 h-3 rounded-full loading-shimmer-bar"></div>
-        <div className="w-16 h-3 rounded-full loading-shimmer-bar"></div>
+    <div className="flex items-center gap-2.5 text-[var(--token-text-tertiary)] bg-[var(--token-main-surface-secondary)] px-4 py-3 rounded-2xl rounded-bl-lg shadow-sm">
+        <div className="w-2 h-2 bg-current rounded-full" style={{ animation: 'bounce 1.4s infinite ease-in-out both', animationDelay: '-0.32s' }}></div>
+        <div className="w-2 h-2 bg-current rounded-full" style={{ animation: 'bounce 1.4s infinite ease-in-out both', animationDelay: '-0.16s' }}></div>
+        <div className="w-2 h-2 bg-current rounded-full" style={{ animation: 'bounce 1.4s infinite ease-in-out both' }}></div>
     </div>
 );
 
@@ -111,6 +111,7 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
     let designContent: string | null = null;
     let whiteboardSteps: WhiteboardStep[] | null = null;
     const mermaidCodes: string[] = [];
+    let statusWidget: Message['statusWidget'] = null;
 
     // QR Code
     const qrRegex = /\[QR_CODE_GENERATE:({.*?})\]\s*/g;
@@ -205,7 +206,17 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         content = content.replace(mermaidRegex, '');
     }
     
-    return { content, chartData, deepThinking, designContent, mermaidCodes, qrCodeSVG, whiteboardSteps };
+    // Weather and Prayer Status Widgets
+    content = content.replace(/\[FETCH_WEATHER\]\s*/g, () => {
+        statusWidget = { type: 'weather' };
+        return '';
+    });
+    content = content.replace(/\[FETCH_PRAYER_TIME\]\s*/g, () => {
+        statusWidget = { type: 'prayer' };
+        return '';
+    });
+    
+    return { content, chartData, deepThinking, designContent, mermaidCodes, qrCodeSVG, whiteboardSteps, statusWidget };
 };
 
 
@@ -230,6 +241,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [forwardingContent, setForwardingContent] = useState<string | null>(null);
+  const [isPerformingWebSearch, setIsPerformingWebSearch] = useState(false);
   
   const currentModel = MODELS[modelId];
 
@@ -351,10 +363,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const currentMessages = messagesRef.current;
       setMessages(prev => prev.map(m => m.id === messageId ? { ...m, isPlanExecuted: true, researchPlan: plan } : m));
       setIsLoading(true);
+      setIsPerformingWebSearch(true);
 
       const planMessageIndex = currentMessages.findIndex(m => m.id === messageId);
       if (planMessageIndex === -1) {
           setIsLoading(false);
+          setIsPerformingWebSearch(false);
           return;
       }
       const userMessageForResearch = currentMessages.slice(0, planMessageIndex).reverse().find(m => m.role === 'user');
@@ -377,6 +391,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           let sources: Message['sources'] = [];
 
           for await (const chunk of stream) {
+              if (isPerformingWebSearch) setIsPerformingWebSearch(false);
               if (stopGenerationRef.current) break;
 
               finalContent += chunk.text;
@@ -392,9 +407,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
           setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ أثناء تنفيذ البحث. يرجى المحاولة مرة أخرى.' } : m));
       } finally {
           setIsLoading(false);
+          setIsPerformingWebSearch(false);
           stopGenerationRef.current = false;
       }
-  }, [setDesignContent]);
+  }, [setDesignContent, isPerformingWebSearch]);
 
   const handleSendMessage = useCallback(async (messageContent: string, isHiddenFromHistory?: boolean) => {
     if (isLoading || (!messageContent.trim() && attachments.length === 0)) return;
@@ -423,6 +439,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
     if (isResearchMode) {
         setIsLoading(true);
+        setIsPerformingWebSearch(true);
         try {
             const plan = await getResearchPlan(messageContent);
             if (plan && plan.length > 0) {
@@ -447,12 +464,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
+            setIsPerformingWebSearch(false);
         }
         return;
     }
 
 
     setIsLoading(true);
+    
     const assistantMessageId = (Date.now() + 1).toString();
     let assistantMessage: Message = { id: assistantMessageId, role: 'assistant', content: '' };
     setMessages(prev => [...prev, assistantMessage]);
@@ -478,6 +497,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const stream: AsyncGenerator<GenerateContentResponse> = await generateContentStream(modelId, userContentForApi, history, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride);
 
       for await (const chunk of stream) {
+        if (isPerformingWebSearch) setIsPerformingWebSearch(false);
         if (stopGenerationRef.current) break;
         
         finalContent += chunk.text;
@@ -545,6 +565,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ ما. يرجى المحاولة مرة أخرى.' } : m));
     } finally {
       setIsLoading(false);
+      setIsPerformingWebSearch(false);
       stopGenerationRef.current = false;
       const duration = Date.now() - startTime;
       setMessages(prev => prev.map(m => {
@@ -554,7 +575,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
         return m;
       }));
     }
-  }, [isLoading, modelId, messages, setScrollToLocation, setPlayLocation, attachments, isDeepThinkingEnabled, isWebSearchEnabled, setDesignContent, systemInstructionOverride, input]);
+  }, [isLoading, modelId, messages, setScrollToLocation, setPlayLocation, attachments, isDeepThinkingEnabled, isWebSearchEnabled, setDesignContent, systemInstructionOverride, input, isPerformingWebSearch]);
   
   const handleEditMessage = useCallback((messageId: string, newContent: string) => {
     const messageIndex = messages.findIndex(m => m.id === messageId);
@@ -625,6 +646,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
         processedWhiteboardRef.current.clear();
     }
   }
+
+  const GoogleSearchIndicator: React.FC = () => (
+    <div className="flex justify-start my-4">
+        <div className="flex items-center gap-3 px-4 py-2 bg-[var(--token-main-surface-secondary)] rounded-full border border-[var(--token-border-default)] shadow-sm animate-fade-in">
+            <GoogleIcon className="w-5 h-5" />
+            <span className="text-sm font-medium text-[var(--token-text-secondary)] animate-pulse">جارِ البحث...</span>
+        </div>
+    </div>
+  );
   
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto relative">
@@ -670,11 +700,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         onExecuteResearch={modelId === ModelId.RESEARCHER ? handleExecuteResearch : undefined}
                         // FIX: Disable forwarding when the onModelChangeAndSetPrompt callback is not provided.
                         onForward={onModelChangeAndSetPrompt ? setForwardingContent : undefined}
-                        isStreaming={isLoading && msg.role === 'assistant' && index === messages.length - 1}
+                        isStreaming={isLoading && !isPerformingWebSearch && msg.role === 'assistant' && index === messages.length - 1}
                     />
                 ))
             )}
-             {isLoading && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
+            {isPerformingWebSearch && <GoogleSearchIndicator />}
+            {isLoading && !isPerformingWebSearch && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
                  <div className="flex justify-start">
                     <LoadingIndicator />
                 </div>

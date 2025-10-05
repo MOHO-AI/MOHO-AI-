@@ -6,11 +6,12 @@ import { ChatView } from './components/ChatView';
 import { DesignPreview } from './components/DesignPreview';
 import { SettingsPage } from './components/SettingsPage';
 import { SocialChatView } from './components/SocialChatView';
-import { SettingsIcon, AlgerianTeacherIcon, NoorAlIslamIcon, WeatherAppIcon, PlusIcon } from './components/Icons';
+import { SettingsIcon, AlgerianTeacherIcon, NoorAlIslamIcon, WeatherAppIcon, PlusIcon, AppStoreIcon } from './components/Icons';
 import { AlgerianTeacherApp } from './components/AlgerianTeacherApp';
 import { NoorAlIslamApp } from './components/noor-al-islam/NoorAlIslamApp';
 import { AdhanNotifier } from './components/AdhanNotifier';
 import { WeatherApp } from './components/WeatherApp';
+import { AppStoresApp } from './components/AppStoresApp';
 
 const ModelSelectorDropdown: React.FC<{
     activeModel: ModelId;
@@ -202,7 +203,7 @@ const ChatContainer: React.FC<{
     );
 };
 
-const AppDrawer: React.FC<{ onAppSelect: (view: 'weatherApp' | 'teacherApp' | 'noorAlIslam') => void }> = ({ onAppSelect }) => {
+const AppDrawer: React.FC<{ onAppSelect: (view: 'weatherApp' | 'teacherApp' | 'noorAlIslam' | 'appStores') => void }> = ({ onAppSelect }) => {
     const [isOpen, setIsOpen] = useState(false);
     const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -216,7 +217,7 @@ const AppDrawer: React.FC<{ onAppSelect: (view: 'weatherApp' | 'teacherApp' | 'n
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelect = (view: 'weatherApp' | 'teacherApp' | 'noorAlIslam') => {
+    const handleSelect = (view: 'weatherApp' | 'teacherApp' | 'noorAlIslam' | 'appStores') => {
         onAppSelect(view);
         setIsOpen(false);
     };
@@ -239,6 +240,9 @@ const AppDrawer: React.FC<{ onAppSelect: (view: 'weatherApp' | 'teacherApp' | 'n
                 <button onClick={() => handleSelect('noorAlIslam')} className="p-3 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-primary)] transition-colors" aria-label="تطبيق نور الإسلام">
                     <NoorAlIslamIcon className="w-8 h-8" />
                 </button>
+                <button onClick={() => handleSelect('appStores')} className="p-3 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-primary)] transition-colors" aria-label="تطبيق متاجر التطبيقات">
+                    <AppStoreIcon className="w-8 h-8" />
+                </button>
             </div>
         </div>
     );
@@ -247,7 +251,7 @@ const AppDrawer: React.FC<{ onAppSelect: (view: 'weatherApp' | 'teacherApp' | 'n
 
 const App: React.FC = () => {
     const [activeModel, setActiveModel] = useState<ModelId>(ModelId.ADAPTIVE);
-    const [currentView, setCurrentView] = useState<'main' | 'settings' | 'teacherApp' | 'noorAlIslam' | 'weatherApp'>('main');
+    const [currentView, setCurrentView] = useState<'main' | 'settings' | 'teacherApp' | 'noorAlIslam' | 'weatherApp' | 'appStores'>('main');
     const [isDesignMode, setIsDesignMode] = useState(false);
     const [designContent, setDesignContent] = useState('');
     const [promptForNextModel, setPromptForNextModel] = useState<string | null>(null);
@@ -305,6 +309,8 @@ const App: React.FC = () => {
                 return <NoorAlIslamApp onBack={() => setCurrentView('main')} />;
             case 'weatherApp':
                 return <WeatherApp onBack={() => setCurrentView('main')} />;
+            case 'appStores':
+                return <AppStoresApp onBack={() => setCurrentView('main')} />;
             case 'main':
             default:
                 return (

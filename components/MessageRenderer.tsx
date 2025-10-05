@@ -21,6 +21,7 @@ import { Bar, Line, Pie } from 'react-chartjs-2';
 import { CheckIcon, CopyIcon, GlobeIcon, FileTextIcon, ImagePlaceholderIcon, ChevronDownIcon, ChevronUpIcon, PaletteIcon, LayoutIcon, EditIcon, MusicIcon, ShareIcon, CodeIcon, MaximizeIcon, XIcon, ZoomInIcon, ZoomOutIcon, RefreshCwIcon, DownloadIcon, CheckCircleIcon, TrashIcon, PlusIcon } from './Icons';
 import type { Message, DeepThinking, ChartData, Source } from '../types';
 import { CodeBlock } from './CodeBlock';
+import { StatusWidget } from './StatusWidget';
 
 ChartJS.register(
   CategoryScale,
@@ -618,6 +619,7 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
           </button>
       </div>
       <div className="prose prose-sm md:prose-base max-w-none prose-p:text-[var(--token-text-secondary)] prose-headings:text-[var(--token-text-primary)] prose-strong:text-[var(--token-text-primary)] prose-li:text-[var(--token-text-secondary)] prose-blockquote:text-[var(--token-text-tertiary)] prose-table:text-[var(--token-text-secondary)] prose-th:text-[var(--token-text-primary)]">
+        {message.statusWidget && <StatusWidget type={message.statusWidget.type} />}
         {message.deepThinking && <DeepThinkingDisplay deepThinking={message.deepThinking} />}
         {message.researchPlan && onExecuteResearch && (
           <ResearchPlanDisplay
