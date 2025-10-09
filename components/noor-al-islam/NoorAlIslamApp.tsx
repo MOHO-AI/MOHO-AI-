@@ -39,7 +39,7 @@ export const NoorAlIslamApp: React.FC<NoorAlIslamAppProps> = ({ onBack }) => {
 
     const containerClasses = page === 'quran'
         ? "h-full w-full flex flex-col font-islamic bg-[var(--token-main-surface-primary)]"
-        : "h-full w-full flex flex-col font-islamic bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:to-green-900/50";
+        : "h-full w-full flex flex-col font-islamic bg-[var(--token-surface-container)]";
     
     return (
         <div className={containerClasses}>
@@ -59,17 +59,19 @@ export const NoorAlIslamApp: React.FC<NoorAlIslamAppProps> = ({ onBack }) => {
             <main className="flex-1 w-full overflow-hidden">
                 {renderPage()}
             </main>
-            <footer className="w-full border-t border-[var(--token-border-default)] bg-[var(--token-main-surface-primary)] z-20">
+            <footer className="w-full border-t border-[var(--token-border-default)] bg-[var(--token-surface-container-low)] z-20">
                 <div className="max-w-md mx-auto grid grid-cols-4">
                     {TABS.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setPage(tab.id)}
-                            className={`flex flex-col items-center justify-center gap-1 py-2 text-center transition-colors duration-200 relative ${page === tab.id ? 'text-green-600 dark:text-green-400' : 'text-[var(--token-text-tertiary)] hover:text-[var(--token-text-primary)]'}`}
+                            className={`flex flex-col items-center justify-center gap-1 py-2 text-center transition-colors duration-200 relative ${page === tab.id ? 'text-[var(--token-on-secondary-container)]' : 'text-[var(--token-on-surface-variant)] hover:text-[var(--token-on-surface)]'}`}
                         >
-                             {page === tab.id && <div className="absolute top-0 h-0.5 w-1/2 bg-green-500 rounded-full"></div>}
-                            <tab.Icon className={`w-7 h-7 mb-0.5 transition-all ${page === tab.id ? '' : 'grayscale opacity-70'}`} />
-                            <span className="text-xs font-medium">{tab.label}</span>
+                             <div className={`absolute top-1/2 -translate-y-1/2 w-16 h-8 rounded-full transition-all duration-300 ${page === tab.id ? 'bg-[var(--token-secondary-container)] opacity-100' : 'opacity-0'}`}></div>
+                            <div className="relative">
+                                <tab.Icon className={`w-7 h-7 mb-0.5 transition-all ${page === tab.id ? '' : 'grayscale opacity-70'}`} />
+                            </div>
+                            <span className="text-xs font-medium relative">{tab.label}</span>
                         </button>
                     ))}
                 </div>

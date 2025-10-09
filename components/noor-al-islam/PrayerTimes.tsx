@@ -137,31 +137,31 @@ export const PrayerTimes: React.FC = () => {
     };
 
     return (
-        <div className="h-full w-full overflow-y-auto p-4 md:p-6 bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50">
+        <div className="h-full w-full overflow-y-auto p-4 md:p-6 bg-[var(--token-surface-container)]">
             <div className="max-w-lg mx-auto">
-                <h1 className="text-2xl font-bold text-center text-teal-700 dark:text-teal-200 mb-4">أوقات الصلاة</h1>
+                <h1 className="text-2xl font-bold text-center text-[var(--token-on-surface)] mb-4">أوقات الصلاة</h1>
                 
                 <form onSubmit={handleManualSearch} className="mb-6 flex flex-col sm:flex-row gap-2">
-                    <input type="text" value={manualCity} onChange={e => setManualCity(e.target.value)} placeholder="المدينة (مثال: Mecca)" className="w-full p-2 bg-white/50 dark:bg-black/20 border border-teal-300/50 dark:border-teal-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                    <input type="text" value={manualCountry} onChange={e => setManualCountry(e.target.value)} placeholder="البلد (مثال: Saudi Arabia)" className="w-full p-2 bg-white/50 dark:bg-black/20 border border-teal-300/50 dark:border-teal-600/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                    <button type="submit" className="px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors">بحث</button>
+                    <input type="text" value={manualCity} onChange={e => setManualCity(e.target.value)} placeholder="المدينة (مثال: Mecca)" className="form-input" />
+                    <input type="text" value={manualCountry} onChange={e => setManualCountry(e.target.value)} placeholder="البلد (مثال: Saudi Arabia)" className="form-input" />
+                    <button type="submit" className="btn bg-[var(--token-primary)] text-[var(--token-on-primary)] hover:opacity-90">بحث</button>
                 </form>
 
                 {isLoading && (
-                    <div className="flex justify-center items-center p-8"><LoaderIcon className="w-8 h-8 animate-spin text-teal-500" /></div>
+                    <div className="flex justify-center items-center p-8"><LoaderIcon className="w-8 h-8 animate-spin text-[var(--token-primary)]" /></div>
                 )}
                 {error && <p className="text-center text-red-500 bg-red-500/10 p-3 rounded-lg">{error}</p>}
                 
                 {prayerData && (
                     <div className="space-y-4 animate-fade-in">
-                        <div className="text-center p-4 bg-white/50 dark:bg-black/20 rounded-xl shadow-sm border border-white">
-                            <p className="font-semibold text-lg text-teal-800 dark:text-teal-100">{prayerData.location}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{prayerData.date.gregorian.date}</p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{`${prayerData.date.hijri.weekday.ar}, ${prayerData.date.hijri.date} ${prayerData.date.hijri.month.ar} ${prayerData.date.hijri.year}`}</p>
+                        <div className="text-center p-4 bg-[var(--token-surface-container-high)] rounded-2xl">
+                            <p className="font-semibold text-lg text-[var(--token-on-surface)]">{prayerData.location}</p>
+                            <p className="text-sm text-[var(--token-on-surface-variant)]">{prayerData.date.gregorian.date}</p>
+                            <p className="text-sm text-[var(--token-on-surface-variant)]">{`${prayerData.date.hijri.weekday.ar}, ${prayerData.date.hijri.date} ${prayerData.date.hijri.month.ar} ${prayerData.date.hijri.year}`}</p>
                         </div>
 
                         {nextPrayer && (
-                            <div className="p-6 bg-gradient-to-tr from-teal-500 to-cyan-500 text-white rounded-2xl shadow-lg text-center">
+                            <div className="p-6 bg-[var(--token-primary-container)] text-[var(--token-on-primary-container)] rounded-3xl shadow-lg text-center">
                                 <p className="text-lg font-medium">الصلاة القادمة</p>
                                 <p className="text-4xl font-bold my-1">{nextPrayer.name}</p>
                                 <div className="flex items-center justify-center gap-2 text-lg opacity-90">
@@ -174,12 +174,12 @@ export const PrayerTimes: React.FC = () => {
 
                         <div className="space-y-2">
                             {Object.entries(PRAYER_NAMES).map(([key, name]) => (
-                                <div key={key} className={`flex items-center justify-between p-3 rounded-xl shadow-sm border border-white transition-all ${nextPrayer?.name.includes(PRAYER_NAMES[key]) ? 'bg-teal-100/80 dark:bg-teal-800/50 scale-105' : 'bg-white/50 dark:bg-black/20'}`}>
+                                <div key={key} className={`flex items-center justify-between p-4 rounded-xl transition-all ${nextPrayer?.name.includes(PRAYER_NAMES[key]) ? 'bg-[var(--token-secondary-container)]' : 'bg-[var(--token-surface-container-high)]'}`}>
                                     <div className="flex items-center gap-3">
                                         <PrayerIcon prayer={key} />
-                                        <span className="font-semibold text-teal-800 dark:text-teal-200">{name}</span>
+                                        <span className={`font-semibold ${nextPrayer?.name.includes(PRAYER_NAMES[key]) ? 'text-[var(--token-on-secondary-container)]' : 'text-[var(--token-on-surface)]'}`}>{name}</span>
                                     </div>
-                                    <span className="font-mono text-xl text-gray-700 dark:text-gray-200">{prayerData.timings[key]}</span>
+                                    <span className={`font-mono text-xl ${nextPrayer?.name.includes(PRAYER_NAMES[key]) ? 'text-[var(--token-on-secondary-container)]' : 'text-[var(--token-on-surface-variant)]'}`}>{prayerData.timings[key]}</span>
                                 </div>
                             ))}
                         </div>

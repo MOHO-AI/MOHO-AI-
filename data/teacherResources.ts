@@ -33,7 +33,19 @@ export const ALGERIAN_TEACHER_RESOURCES = {
 - **'mermaid'**: للخرائط الذهنية والرسوم البيانية الهيكلية.
 - **'generate_image'**: **لإنشاء صورة بالذكاء الاصطناعي.** استخدم هذا النوع لإنشاء صورة جديدة من الصفر. يجب أن يكون المحتوى ('content') وصفًا **باللغة الإنجليزية** دقيقًا ومفصلاً للصورة المطلوبة. مثال: \`{"type": "generate_image", "content": "A scientific diagram of a plant cell with labels for the nucleus, cytoplasm, and cell wall."}\`.
 - **'image'**: **للصور الموجودة مسبقًا.** لا تستخدم هذا النوع إلا إذا كان لديك رابط مباشر لصورة (ينتهي بـ .png, .jpg, .svg). **الأفضلية دائمًا لـ 'generate_image'**.
-- **'html'**: للمحتوى المنسق خصيصًا مثل الجداول الملونة، الملاحظات البارزة، أو أي تنسيق لا يوفره الماركداون. يجب أن يكون الكود HTML snippet صالحًا (لا تحتاج إلى <html> أو <body>).
+- **'html'**: لإنشاء **محاكاة تفاعلية (interactive simulations)** ومحتوى مرئي معقد. استخدم هذه الميزة لشرح المفاهيم التي تستفيد من الحركة والتفاعل. يمكنك تضمين CSS داخل وسوم \`<style>\` و JavaScript داخل وسوم \`<script>\` مباشرة في المحتوى.
+  **استخدامات مقترحة:**
+  - **الفيزياء:** محاكاة دارة كهربائية (مفتاح، مصباح، بطارية)، حركة المقذوفات، قوانين نيوتن.
+  - **الكيمياء:** محاكاة تفاعل كيميائي بسيط، بنية الذرة.
+  - **الهندسة:** رسم أشكال هندسية ديناميكية، تمثيل مجسمات ثلاثية الأبعاد بسيطة باستخدام CSS 3D transforms.
+  - **علوم الحياة:** محاكاة انقسام الخلية.
+  - **الجغرافيا والفلك:** محاكاة حركة الكواكب في المجموعة الشمسية.
+  **مثال لمحاكاة دارة كهربائية:**
+  \`{"type": "html", "content": "<style>#circuit-container { padding: 1em; border: 2px solid #ccc; border-radius: 8px; text-align: center; } .bulb { width: 40px; height: 40px; background: #555; border-radius: 50%; margin: 10px auto; transition: background 0.3s, box-shadow 0.3s; } .bulb.on { background: #ffeb3b; box-shadow: 0 0 20px #ffeb3b; } .switch { cursor: pointer; padding: 8px 16px; background: #eee; border: 1px solid #aaa; border-radius: 4px; user-select: none; } .switch.on { background: #4caf50; color: white; }</style><div id='circuit-container'><h4>دارة كهربائية بسيطة</h4><div id='bulb' class='bulb'></div><button id='switch' class='switch'>مفتاح مغلق</button></div><script>const bulb = document.getElementById('bulb'); const aSwitch = document.getElementById('switch'); aSwitch.addEventListener('click', () => { aSwitch.classList.toggle('on'); bulb.classList.toggle('on'); aSwitch.textContent = aSwitch.classList.contains('on') ? 'مفتاح مفتوح' : 'مفتاح مغلق'; });</script>"}\`
+  **قواعد هامة للـ HTML:**
+  - حافظ على بساطة المحاكاة. لا تستخدم مكتبات خارجية.
+  - يجب أن يكون كل الكود (HTML, CSS, JS) مضمنًا في حقل 'content'.
+  - تأكد من أن المحاكاة تعمل بشكل مستقل تمامًا.
 - **'svg'**: للرسومات البسيطة التي يمكنك إنشاؤها بنفسك ككود، مثل الأشكال الهندسية أو الأسهم التوضيحية.
 
 **قواعد عامة للسبورة:**

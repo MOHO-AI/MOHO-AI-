@@ -78,7 +78,7 @@ const StepRenderer: React.FC<{ step: WhiteboardStep }> = ({ step }) => {
             );
         case 'image_loading':
             return (
-                <div className="w-full h-64 flex flex-col justify-center items-center my-4 bg-[var(--token-main-surface-tertiary)] rounded-lg p-4">
+                <div className="w-full h-64 flex flex-col justify-center items-center my-4 bg-[var(--token-surface-container)] rounded-lg p-4">
                     <LoaderIcon className="w-8 h-8 animate-spin text-[var(--token-text-secondary)] mb-4" />
                     <p className="text-sm text-[var(--token-text-secondary)]">جارٍ إنشاء صورة...</p>
                     <p className="text-xs text-center text-[var(--token-text-tertiary)] mt-2 italic">"{step.content}"</p>
@@ -198,8 +198,8 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({ steps }) => {
 
     if (steps.length === 0) {
         return (
-             <div className="bg-white dark:bg-[#282c34] rounded-xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden items-center justify-center text-center p-4 whiteboard-pattern">
-                 <WhiteboardIcon className="w-16 h-16 text-gray-400 dark:text-gray-500 mb-4" />
+             <div className="bg-[var(--token-surface-container)] rounded-2xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden items-center justify-center text-center p-4 whiteboard-pattern">
+                 <WhiteboardIcon className="w-16 h-16 text-[var(--token-on-surface-variant)] mb-4" />
                  <h3 className="font-bold text-lg text-[var(--token-text-primary)]">السبورة الرقمية</h3>
                  <p className="text-sm text-[var(--token-text-secondary)] max-w-xs">
                      اطلب من الأستاذ شرحًا يتضمن معادلات، صورًا، أو رسومًا بيانية، وستظهر هنا خطوة بخطوة.
@@ -209,7 +209,7 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({ steps }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-[#282c34] rounded-xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden whiteboard-pattern">
+        <div className="bg-[var(--token-surface-container-lowest)] rounded-2xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden whiteboard-pattern">
             <div className="flex-1 p-6 overflow-y-auto prose prose-sm max-w-none prose-p:text-[var(--token-text-secondary)] prose-headings:text-[var(--token-text-primary)] prose-strong:text-[var(--token-text-primary)] prose-li:text-[var(--token-text-secondary)]">
                 <style>{`.prose-styles-reset table, .prose-styles-reset tr, .prose-styles-reset td { all: revert; }`}</style>
                 <div key={currentStepIndex} className="animate-fade-in">
@@ -217,26 +217,27 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({ steps }) => {
                 </div>
             </div>
             
-            <div className="p-2 border-t border-[var(--token-border-default)] bg-white/70 dark:bg-[#282c34]/70 backdrop-blur-sm flex-shrink-0">
-                 <div className="w-full bg-gray-300/50 dark:bg-gray-700/50 rounded-full h-1 my-2">
-                    <div className="bg-[var(--token-interactive-bg-primary)] h-1 rounded-full" style={{ width: `${progress}%`, transition: progress > 0 ? 'width 0.1s linear' : 'none' }}></div>
+            <div className="p-2 border-t border-[var(--token-border-default)] bg-[var(--token-surface-container-low)]/80 backdrop-blur-sm flex-shrink-0">
+                 <div className="w-full bg-[var(--token-surface-container-high)] rounded-full h-1 my-2">
+                    <div className="bg-[var(--token-primary)] h-1 rounded-full" style={{ width: `${progress}%`, transition: progress > 0 ? 'width 0.1s linear' : 'none' }}></div>
                 </div>
 
                  <div className="flex items-center justify-between">
                      <div className="flex items-center gap-1">
-                        <button onClick={togglePlay} className="p-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--token-main-surface-tertiary)]" aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}>
-                            {isPlaying ? <PauseIcon className="w-5 h-5"/> : <PlayIcon className="w-5 h-5"/>}
-                        </button>
                         <button onClick={restart} className="p-2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--token-main-surface-tertiary)]" aria-label="إعادة"><RefreshCwIcon className="w-5 h-5" /></button>
                      </div>
-                    <div className="flex items-center gap-4">
-                         <button onClick={() => manualSetStep(Math.max(0, currentStepIndex - 1))} disabled={currentStepIndex === 0} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)] disabled:opacity-30"><ChevronRightIcon className="w-5 h-5" /></button>
-                         <span className="text-sm font-semibold font-mono tabular-nums">
-                            {currentStepIndex + 1} / {steps.length}
-                        </span>
-                         <button onClick={() => manualSetStep(Math.min(steps.length - 1, currentStepIndex + 1))} disabled={currentStepIndex === steps.length - 1} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)] disabled:opacity-30"><ChevronLeftIcon className="w-5 h-5" /></button>
+                    <div className="flex items-center gap-2">
+                         <button onClick={() => manualSetStep(Math.max(0, currentStepIndex - 1))} disabled={currentStepIndex === 0} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)] disabled:opacity-30"><ChevronRightIcon className="w-6 h-6" /></button>
+                         <button onClick={togglePlay} className="p-4 w-14 h-14 flex items-center justify-center rounded-full bg-[var(--token-primary-container)] text-[var(--token-on-primary-container)] hover:opacity-90" aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}>
+                            {isPlaying ? <PauseIcon className="w-6 h-6"/> : <PlayIcon className="w-6 h-6"/>}
+                        </button>
+                         <button onClick={() => manualSetStep(Math.min(steps.length - 1, currentStepIndex + 1))} disabled={currentStepIndex === steps.length - 1} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)] disabled:opacity-30"><ChevronLeftIcon className="w-6 h-6" /></button>
                     </div>
-                    <div className="w-20"></div>
+                    <div className="w-10">
+                        <span className="text-sm font-semibold font-mono tabular-nums">
+                            {currentStepIndex + 1}/{steps.length}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 overflow-x-auto p-2 filmstrip-scrollbar">
@@ -244,10 +245,10 @@ export const Whiteboard: React.FC<WhiteboardProps> = ({ steps }) => {
                         <button 
                             key={index} 
                             onClick={() => manualSetStep(index)}
-                            className={`w-14 h-14 flex-shrink-0 rounded-lg flex items-center justify-center transition-all border-2 ${currentStepIndex === index ? 'border-[var(--token-interactive-bg-primary)] scale-110 bg-white dark:bg-gray-700' : 'border-transparent bg-[var(--token-main-surface-tertiary)] hover:border-[var(--token-border-default)]'}`}
+                            className={`w-14 h-14 flex-shrink-0 rounded-xl flex items-center justify-center transition-all border-2 ${currentStepIndex === index ? 'border-[var(--token-primary)] scale-105 bg-[var(--token-surface-container-highest)]' : 'border-transparent bg-[var(--token-surface-container-high)] hover:border-[var(--token-outline)]'}`}
                             title={`الخطوة ${index + 1}: ${step.type}`}
                         >
-                            <span className={currentStepIndex === index ? 'text-[var(--token-interactive-bg-primary)]' : 'text-[var(--token-icon-secondary)]'}>
+                            <span className={currentStepIndex === index ? 'text-[var(--token-primary)]' : 'text-[var(--token-on-surface-variant)]'}>
                                 {getStepIcon(step.type)}
                             </span>
                         </button>

@@ -20,10 +20,10 @@ const StoreButton: React.FC<{ store: AppStore, onClick: () => void }> = ({ store
     const faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
 
     return (
-        <button onClick={onClick} className="p-4 flex flex-col justify-center items-center gap-3 bg-[var(--token-main-surface-secondary)] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-transparent hover:border-[var(--token-interactive-bg-primary)]">
-            <div className="w-12 h-12 bg-[var(--token-main-surface-tertiary)] rounded-full flex items-center justify-center">
+        <button onClick={onClick} className="p-4 flex flex-col justify-center items-center gap-3 bg-[var(--token-surface-container-high)] rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border border-transparent hover:border-[var(--token-primary)]">
+            <div className="w-12 h-12 bg-[var(--token-surface-container-highest)] rounded-full flex items-center justify-center">
                 {faviconError ? (
-                    <GlobeIcon className="w-8 h-8 text-[var(--token-icon-tertiary)]" />
+                    <GlobeIcon className="w-8 h-8 text-[var(--token-on-surface-variant)]" />
                 ) : (
                     <img
                         src={faviconUrl}
@@ -33,7 +33,7 @@ const StoreButton: React.FC<{ store: AppStore, onClick: () => void }> = ({ store
                     />
                 )}
             </div>
-            <span className="text-sm font-semibold text-center text-[var(--token-text-primary)]">{store.name}</span>
+            <span className="text-sm font-semibold text-center text-[var(--token-on-surface)]">{store.name}</span>
         </button>
     );
 };
@@ -149,7 +149,7 @@ ${allStores.map(s => `- ${s.name}`).join('\n')}
     }
 
     return (
-        <div className="h-full w-full flex flex-col bg-gradient-to-b from-gray-50 to-gray-200 dark:from-[#131314] dark:to-[#212121]">
+        <div className="h-full w-full flex flex-col bg-[var(--token-surface-container)]">
             <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                 <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                 <h1 className="text-xl font-bold">متاجر التطبيقات</h1>
@@ -164,14 +164,14 @@ ${allStores.map(s => `- ${s.name}`).join('\n')}
                                  onChange={e => setSearchQuery(e.target.value)}
                                  onKeyDown={e => e.key === 'Enter' && handleAISearch()}
                                  placeholder="ابحث بالذكاء الاصطناعي... (مثال: متاجر ألعاب للحاسوب)"
-                                 className="w-full p-4 pr-12 bg-[var(--token-main-surface-secondary)] border border-[var(--token-border-default)] rounded-full focus:ring-2 focus:ring-[var(--token-interactive-bg-primary)] outline-none"
+                                 className="w-full p-4 pr-12 bg-[var(--token-surface-container-high)] border border-[var(--token-outline-variant)] rounded-full focus:ring-2 focus:ring-[var(--token-primary)] outline-none"
                             />
-                            <button onClick={handleAISearch} disabled={isLoading} className="absolute left-2 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--token-interactive-bg-primary)] text-white rounded-full hover:bg-[var(--token-interactive-bg-primary-hover)] disabled:bg-gray-400">
+                            <button onClick={handleAISearch} disabled={isLoading} className="absolute left-2 top-1/2 -translate-y-1/2 p-2.5 bg-[var(--token-primary)] text-[var(--token-on-primary)] rounded-full hover:opacity-90 disabled:bg-gray-400">
                                 {isLoading ? <LoaderIcon className="w-5 h-5 animate-spin" /> : <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" /></svg>}
                             </button>
                          </div>
                          {filteredStoreNames !== null && (
-                             <button onClick={clearFilter} className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 mx-auto">
+                             <button onClick={clearFilter} className="mt-2 text-sm text-[var(--token-primary)] hover:underline flex items-center gap-1 mx-auto">
                                  <XIcon className="w-3.5 h-3.5" />
                                  <span>مسح نتائج البحث ({filteredStoreNames.length} نتيجة)</span>
                              </button>
@@ -181,7 +181,7 @@ ${allStores.map(s => `- ${s.name}`).join('\n')}
 
                     {filteredAndroidStores.length > 0 && (
                         <div className="mb-8">
-                            <h2 className="text-2xl font-bold mb-4 text-[var(--token-text-primary)]">متاجر أندرويد</h2>
+                            <h2 className="text-xl font-bold mb-4 tracking-tight text-[var(--token-on-surface)]">متاجر أندرويد</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                 {filteredAndroidStores.map(store => <StoreButton key={store.name} store={store} onClick={() => setSelectedStore(store)} />)}
                             </div>
@@ -190,7 +190,7 @@ ${allStores.map(s => `- ${s.name}`).join('\n')}
 
                     {filteredPcStores.length > 0 && (
                         <div>
-                            <h2 className="text-2xl font-bold mb-4 text-[var(--token-text-primary)]">متاجر الحاسوب</h2>
+                            <h2 className="text-xl font-bold mb-4 tracking-tight text-[var(--token-on-surface)]">متاجر الحاسوب</h2>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                 {filteredPcStores.map(store => <StoreButton key={store.name} store={store} onClick={() => setSelectedStore(store)} />)}
                             </div>
@@ -199,8 +199,8 @@ ${allStores.map(s => `- ${s.name}`).join('\n')}
                     
                     {filteredStoreNames !== null && filteredAndroidStores.length === 0 && filteredPcStores.length === 0 && !isLoading && (
                         <div className="text-center py-16">
-                            <p className="text-lg font-semibold text-[var(--token-text-secondary)]">لا توجد متاجر تطابق بحثك.</p>
-                            <p className="text-sm text-[var(--token-text-tertiary)]">حاول تعديل مصطلحات البحث أو مسح النتائج لعرض جميع المتاجر.</p>
+                            <p className="text-lg font-semibold text-[var(--token-on-surface-variant)]">لا توجد متاجر تطابق بحثك.</p>
+                            <p className="text-sm text-[var(--token-on-surface-variant)]">حاول تعديل مصطلحات البحث أو مسح النتائج لعرض جميع المتاجر.</p>
                         </div>
                     )}
                 </div>

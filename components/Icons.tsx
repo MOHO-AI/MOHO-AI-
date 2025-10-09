@@ -564,3 +564,7 @@ export const GoogleIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (
 export const AppStoreIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
     <img src="https://cdn-icons-png.flaticon.com/512/11488/11488499.png" alt="App Stores Icon" {...props} />
 );
+
+export const MohoSearchIcon: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = (props) => (
+    <img src="https://imgg.io/images/2025/10/06/4626dea0c8d3dd4ac5b26519e1188f71.png" alt="MOHO Search Engine Icon" {...props} />
+);

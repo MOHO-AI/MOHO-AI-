@@ -75,30 +75,30 @@ export const IslamicCalendar: React.FC = () => {
     const today = new Date();
     const isCurrentMonth = today.getFullYear() === year && today.getMonth() + 1 === month;
     
-    const hijriMonthDisplay = calendarData?.[0]?.date?.hijri;
+    const hijriMonthDisplay = calendarData?.[15]?.date?.hijri; // Pick a day from middle of month
 
     return (
-        <div className="h-full w-full overflow-y-auto p-2 sm:p-4 md:p-6 bg-gradient-to-br from-green-50 to-lime-100 dark:from-green-900/50 dark:to-lime-900/50">
+        <div className="h-full w-full overflow-y-auto p-2 sm:p-4 md:p-6 bg-[var(--token-surface-container)]">
             <div className="max-w-4xl mx-auto">
                 <header className="flex items-center justify-between mb-4">
-                     <button onClick={() => handleMonthChange(-1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"><ChevronRightIcon className="w-6 h-6" /></button>
+                     <button onClick={() => handleMonthChange(-1)} className="p-2 rounded-full hover:bg-[var(--token-surface-container-high)]"><ChevronRightIcon className="w-6 h-6" /></button>
                      <div className="text-center">
-                        <h1 className="text-xl font-bold text-green-800 dark:text-green-200">{new Date(year, month-1).toLocaleString('ar', { month: 'long', year: 'numeric' })}</h1>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                        <h1 className="text-xl font-bold text-[var(--token-on-surface)]">{new Date(year, month-1).toLocaleString('ar', { month: 'long', year: 'numeric' })}</h1>
+                        <p className="text-sm text-[var(--token-on-surface-variant)]">
                            {hijriMonthDisplay ? `${hijriMonthDisplay.month.ar} ${hijriMonthDisplay.year}` : (isLoading ? '...' : '-')}
                         </p>
                      </div>
-                     <button onClick={() => handleMonthChange(1)} className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"><ChevronLeftIcon className="w-6 h-6" /></button>
+                     <button onClick={() => handleMonthChange(1)} className="p-2 rounded-full hover:bg-[var(--token-surface-container-high)]"><ChevronLeftIcon className="w-6 h-6" /></button>
                 </header>
 
-                {isLoading && <div className="flex justify-center items-center p-8"><LoaderIcon className="w-8 h-8 animate-spin text-green-500" /></div>}
+                {isLoading && <div className="flex justify-center items-center p-8"><LoaderIcon className="w-8 h-8 animate-spin text-[var(--token-primary)]" /></div>}
                 {error && <p className="text-center text-red-500 bg-red-500/10 p-3 rounded-lg">{error}</p>}
                 
                 {!isLoading && !error && calendarData.length > 0 && (
                     <div className="animate-fade-in">
                         <div className="grid grid-cols-7 gap-1 text-center">
                             {['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'].map(day => (
-                                <div key={day} className="font-semibold p-1 md:p-2 text-[11px] sm:text-sm text-green-700 dark:text-green-300">{day}</div>
+                                <div key={day} className="font-semibold p-1 md:p-2 text-[11px] sm:text-sm text-[var(--token-on-surface-variant)]">{day}</div>
                             ))}
                             {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`}></div>)}
                             {calendarData.map(day => {
@@ -109,22 +109,22 @@ export const IslamicCalendar: React.FC = () => {
                                     <button 
                                         key={day.date.readable} 
                                         onClick={() => setSelectedDay(day)}
-                                        className={`relative p-1 rounded-lg aspect-square flex flex-col transition-all border-2 text-right ${
+                                        className={`relative p-1 rounded-xl aspect-square flex flex-col transition-all text-right ${
                                             isSelected
-                                                ? 'border-green-500 bg-green-100 dark:bg-green-800/50'
+                                                ? 'bg-[var(--token-primary)] text-[var(--token-on-primary)]'
                                                 : isToday
-                                                ? 'bg-green-200 dark:bg-green-700/50 border-green-400 dark:border-green-500'
-                                                : 'bg-white/40 dark:bg-black/10 border-transparent hover:bg-white/80 dark:hover:bg-black/20'
+                                                ? 'border-2 border-[var(--token-primary)]'
+                                                : 'hover:bg-[var(--token-surface-container-high)]'
                                         }`}
                                     >
                                         <div className="flex justify-between items-start">
-                                            <span className="font-bold text-base sm:text-xl text-gray-800 dark:text-gray-200">{day.date.hijri.day}</span>
-                                            <span className="text-[9px] sm:text-xs text-gray-500 dark:text-gray-400">{day.date.gregorian.day}</span>
+                                            <span className={`font-bold text-base sm:text-xl ${isSelected ? 'text-white' : 'text-[var(--token-on-surface)]'}`}>{day.date.hijri.day}</span>
+                                            <span className={`text-[9px] sm:text-xs ${isSelected ? 'text-white/80' : 'text-[var(--token-on-surface-variant)]'}`}>{day.date.gregorian.day}</span>
                                         </div>
                                         <div className="flex-grow"></div>
                                         {holidays.length > 0 && (
                                             <div className="w-full mt-auto">
-                                                <div className="h-1.5 w-full bg-green-500 rounded-full" title={holidays.join(', ')}></div>
+                                                <div className={`h-1.5 w-full rounded-full ${isSelected ? 'bg-white/50' : 'bg-green-500'}`} title={holidays.join(', ')}></div>
                                             </div>
                                         )}
                                     </button>
@@ -133,25 +133,24 @@ export const IslamicCalendar: React.FC = () => {
                         </div>
 
                         {selectedDay && (
-                            <div className="mt-4 p-4 bg-white/60 dark:bg-black/20 backdrop-blur-sm rounded-xl border border-white/50 dark:border-black/20 animate-fade-in">
-                                <h3 className="font-bold text-lg text-green-800 dark:text-green-200 mb-2">
-                                    {/* Fix: Convert the `year` string to a number before passing it to the `Date` constructor. */}
+                            <div className="mt-4 p-4 bg-[var(--token-surface-container-high)] rounded-2xl animate-fade-in">
+                                <h3 className="font-bold text-lg text-[var(--token-on-surface)] mb-2">
                                     {new Date(parseInt(selectedDay.date.gregorian.year, 10), selectedDay.date.gregorian.month.number - 1, parseInt(selectedDay.date.gregorian.day, 10)).toLocaleDateString('ar-DZ', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                 </h3>
-                                <p className="text-gray-600 dark:text-gray-300 mb-3">
+                                <p className="text-[var(--token-on-surface-variant)] mb-3">
                                     يوافق {selectedDay.date.hijri.day} {selectedDay.date.hijri.month.ar} {selectedDay.date.hijri.year} هـ
                                 </p>
                                 {selectedDay.date.hijri.holidays.length > 0 ? (
                                     <div>
-                                        <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-200 mb-1">المناسبات الدينية:</h4>
-                                        <ul className="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-1">
+                                        <h4 className="font-semibold text-sm text-[var(--token-on-surface)] mb-1">المناسبات الدينية:</h4>
+                                        <ul className="list-disc list-inside text-[var(--token-on-surface-variant)] space-y-1">
                                             {selectedDay.date.hijri.holidays.map((holiday, index) => (
                                                 <li key={index}>{holiday}</li>
                                             ))}
                                         </ul>
                                     </div>
                                 ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">لا توجد مناسبات دينية في هذا اليوم.</p>
+                                    <p className="text-sm text-[var(--token-on-surface-variant)]">لا توجد مناسبات دينية في هذا اليوم.</p>
                                 )}
                             </div>
                         )}

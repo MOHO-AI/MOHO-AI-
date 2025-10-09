@@ -67,7 +67,7 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
             const coeff = subject.coeff || 0;
 
             const continuousAssessmentAvg = (activities + test1) / 2;
-            const subjectAvg = (continuousAssessmentAvg + exam) / 3;
+            const subjectAvg = (continuousAssessmentAvg + exam * 0.5) / 2; // Exam is on 40, so we take half
             const subjectTotal = subjectAvg * coeff;
 
             if (coeff > 0) {
@@ -103,36 +103,36 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
     };
 
     return (
-        <div className="h-full flex flex-col bg-gray-50 dark:bg-[#131314] text-gray-800 dark:text-gray-200" style={{fontFamily: "'Tajawal', sans-serif"}}>
+        <div className="h-full flex flex-col bg-[var(--token-surface-container)] text-[var(--token-on-surface)]" style={{fontFamily: "'Tajawal', sans-serif"}}>
             <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                 <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                 <h1 className="text-xl font-bold">حاسبة المعدل الدراسي</h1>
             </header>
             <div className="flex-1 overflow-y-auto p-4 md:p-8">
-                 <div className="card p-4 sm:p-6 md:p-8 max-w-7xl mx-auto bg-white dark:bg-gray-800">
+                 <div className="card p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
                     <div className="overflow-x-auto">
                         <table className="min-w-full w-full text-center">
                             <thead className="text-sm">
                                 <tr className="table-header">
-                                    <th className="p-3 rounded-tr-lg">المادة</th>
-                                    <th className="p-3">تقويم النشاطات</th>
-                                    <th className="p-3">الفرض 1</th>
-                                    <th className="p-3">الاختبار (على 40)</th>
+                                    <th className="p-3 rounded-tr-2xl">المادة</th>
+                                    <th className="p-3">تقويم</th>
+                                    <th className="p-3">الفرض</th>
+                                    <th className="p-3">الاختبار</th>
                                     <th className="p-3">المعامل</th>
-                                    <th className="p-3">معدل المادة</th>
-                                    <th className="p-3 rounded-tl-lg">المجموع</th>
+                                    <th className="p-3">المعدل</th>
+                                    <th className="p-3 rounded-tl-2xl">المجموع</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                            <tbody className="divide-y divide-[var(--token-outline-variant)]">
                                 {calculationResults.subjectsWithAvg.map((subject, index) => (
-                                     <tr key={index}>
-                                        <td className="p-2 font-semibold text-gray-700 dark:text-gray-300">{subject.name}</td>
-                                        <td className="p-2"><input type="number" value={subject.activities} onChange={e => handleInputChange(index, 'activities', e.target.value)} className="form-input bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200" placeholder="20" min="0" max="20" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.test1} onChange={e => handleInputChange(index, 'test1', e.target.value)} className="form-input bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200" placeholder="20" min="0" max="20" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.exam} onChange={e => handleInputChange(index, 'exam', e.target.value)} className="form-input bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200" placeholder="40" min="0" max="40" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.coeff} onChange={e => handleCoeffChange(index, e.target.value)} className="form-input bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200" min="0" max="10" step="1" /></td>
-                                        <td className="p-2 font-bold text-blue-600 dark:text-blue-400">{subject.subjectAvg}</td>
-                                        <td className="p-2 font-bold text-gray-800 dark:text-gray-200">{subject.subjectTotal}</td>
+                                     <tr key={index} className="hover:bg-[var(--token-surface-container)] transition-colors">
+                                        <td className="p-2 font-semibold text-[var(--token-on-surface-variant)]">{subject.name}</td>
+                                        <td className="p-2"><input type="number" value={subject.activities} onChange={e => handleInputChange(index, 'activities', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
+                                        <td className="p-2"><input type="number" value={subject.test1} onChange={e => handleInputChange(index, 'test1', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
+                                        <td className="p-2"><input type="number" value={subject.exam} onChange={e => handleInputChange(index, 'exam', e.target.value)} className="form-input" placeholder="40" min="0" max="40" step="0.25" /></td>
+                                        <td className="p-2"><input type="number" value={subject.coeff} onChange={e => handleCoeffChange(index, e.target.value)} className="form-input" min="0" max="10" step="1" /></td>
+                                        <td className="p-2 font-bold text-[var(--token-primary)]">{subject.subjectAvg}</td>
+                                        <td className="p-2 font-bold text-[var(--token-on-surface)]">{subject.subjectTotal}</td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -140,11 +140,11 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                        <button onClick={handleCalculate} className="btn w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700">
+                        <button onClick={handleCalculate} className="btn w-full sm:w-auto bg-[var(--token-primary)] text-[var(--token-on-primary)] hover:opacity-90">
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2H6zm1 2a1 1 0 000 2h6a1 1 0 100-2H7zm6 4a1 1 0 011 1v4a1 1 0 11-2 0v-4a1 1 0 011-1zm-3 2a1 1 0 100 2h.01a1 1 0 100-2H10zm-4 0a1 1 0 100 2h.01a1 1 0 100-2H6z" clipRule="evenodd" /></svg>
                             احسب المعدل
                         </button>
-                        <button onClick={handleReset} className="btn w-full sm:w-auto bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500">
+                        <button onClick={handleReset} className="btn w-full sm:w-auto bg-[var(--token-secondary-container)] text-[var(--token-on-secondary-container)] hover:opacity-90">
                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" /></svg>
                             إعادة تعيين
                         </button>

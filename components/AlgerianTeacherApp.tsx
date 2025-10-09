@@ -85,15 +85,15 @@ const ExamCountdown: React.FC = () => {
     }, []);
 
     const TimeBox: React.FC<{ value: number; label: string }> = ({ value, label }) => (
-        <div className="flex flex-col items-center justify-center bg-white/20 backdrop-blur-sm p-3 rounded-lg min-w-[70px] md:min-w-[80px]">
+        <div className="flex flex-col items-center justify-center bg-black/20 backdrop-blur-sm p-3 rounded-2xl min-w-[70px] md:min-w-[80px]">
             <span className="text-3xl md:text-4xl font-bold text-white">{value.toString().padStart(2, '0')}</span>
-            <span className="text-xs text-white/80 uppercase">{label}</span>
+            <span className="text-xs text-white/80 uppercase tracking-wider">{label}</span>
         </div>
     );
 
     if (isExamTime) {
          return (
-            <div className="text-center my-6 p-4 bg-green-500/80 rounded-xl shadow-lg animate-fade-in">
+            <div className="text-center my-6 p-4 bg-green-500/80 rounded-2xl shadow-lg animate-fade-in">
                 <h2 className="text-2xl font-bold text-white">فترة الإختبار جارية حاليا</h2>
                 <p className="text-white/90">بالتوفيق لجميع التلاميذ!</p>
             </div>
@@ -126,7 +126,7 @@ const ResourcePage: React.FC<{ title: string; resources: any; onBack: () => void
     if (selectedResource) {
         return (
             <div className="h-full flex flex-col">
-                <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
+                <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                     <button onClick={() => setSelectedResource(null)} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                     <h3 className="font-semibold truncate">{selectedResource.title}</h3>
                 </header>
@@ -138,8 +138,8 @@ const ResourcePage: React.FC<{ title: string; resources: any; onBack: () => void
     if (selectedSubject) {
         const subjectResources = resources.subjects[selectedSubject];
         return (
-             <div className="h-full flex flex-col">
-                 <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
+             <div className="h-full flex flex-col bg-[var(--token-surface-container)]">
+                 <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                     <button onClick={() => setSelectedSubject(null)} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                     <h3 className="font-bold text-lg">{selectedSubject}</h3>
                 </header>
@@ -147,8 +147,9 @@ const ResourcePage: React.FC<{ title: string; resources: any; onBack: () => void
                     {Array.isArray(subjectResources) ? (
                         <div className="space-y-2">
                            {subjectResources.map((item: any, index: number) => (
-                               <button key={index} onClick={() => handleSelectResource(item.url, item.title)} className="w-full text-right p-3 bg-[var(--token-main-surface-secondary)] rounded-lg hover:bg-[var(--token-main-surface-tertiary)] transition-colors">
-                                   {item.title}
+                               <button key={index} onClick={() => handleSelectResource(item.url, item.title)} className="w-full text-right p-4 bg-[var(--token-main-surface-secondary)] rounded-xl hover:bg-[var(--token-main-surface-tertiary)] transition-colors flex justify-between items-center">
+                                   <span>{item.title}</span>
+                                   <ChevronLeftIcon className="w-5 h-5 text-[var(--token-on-surface-variant)]" />
                                </button>
                            ))}
                         </div>
@@ -161,15 +162,15 @@ const ResourcePage: React.FC<{ title: string; resources: any; onBack: () => void
     }
     
     return (
-        <div className="h-full flex flex-col">
-            <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
+        <div className="h-full flex flex-col bg-[var(--token-surface-container)]">
+            <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                 <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                 <h2 className="font-bold text-xl">{title}</h2>
             </header>
             <div className="p-4 grid grid-cols-2 md:grid-cols-3 gap-4 overflow-y-auto">
                 {Object.keys(resources.subjects).map(subject => (
-                    <button key={subject} onClick={() => setSelectedSubject(subject)} className="p-4 aspect-square flex flex-col justify-center items-center gap-2 bg-[var(--token-main-surface-secondary)] rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all">
-                        <span className="text-lg font-semibold">{subject}</span>
+                    <button key={subject} onClick={() => setSelectedSubject(subject)} className="p-4 aspect-square flex flex-col justify-center items-center gap-2 bg-[var(--token-surface-container-high)] rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all">
+                        <span className="text-lg font-semibold text-center">{subject}</span>
                     </button>
                 ))}
             </div>
@@ -197,7 +198,7 @@ const WebsiteViewerPage: React.FC<{ onBack: () => void; }> = ({ onBack }) => {
         const faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`;
 
         return (
-            <button onClick={onClick} className="p-4 aspect-square flex flex-col justify-center items-center gap-3 bg-[var(--token-main-surface-secondary)] rounded-xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all">
+            <button onClick={onClick} className="p-4 aspect-[4/3] flex flex-col justify-center items-center gap-3 bg-[var(--token-surface-container-high)] rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-1 transition-all">
                 {faviconError ? (
                     <GlobeIcon className="w-10 h-10 text-[var(--token-icon-tertiary)]" />
                 ) : (
@@ -257,8 +258,8 @@ const WebsiteViewerPage: React.FC<{ onBack: () => void; }> = ({ onBack }) => {
     }
 
     return (
-        <div className="h-full flex flex-col bg-[var(--token-main-surface-primary)]">
-            <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0">
+        <div className="h-full flex flex-col bg-[var(--token-surface-container)]">
+            <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                 <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                 <h2 className="font-bold text-xl">مواقع تعليمية موثوقة</h2>
             </header>
@@ -293,15 +294,15 @@ const ChatWithWhiteboard: React.FC<{onBack: () => void}> = ({onBack}) => {
                 </div>
                  <div className="md:hidden">
                     {isWhiteboardActive && (
-                        <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-main-surface-tertiary)]">
-                             <button onClick={() => setMobileView('chat')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'chat' ? 'bg-white shadow' : ''}`}>محادثة</button>
-                             <button onClick={() => setMobileView('whiteboard')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'whiteboard' ? 'bg-white shadow' : ''}`}>سبورة</button>
+                        <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-surface-container)]">
+                             <button onClick={() => setMobileView('chat')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'chat' ? 'bg-[var(--token-surface-container-highest)] shadow' : ''}`}>محادثة</button>
+                             <button onClick={() => setMobileView('whiteboard')} className={`px-3 py-1 text-sm rounded-full ${mobileView === 'whiteboard' ? 'bg-[var(--token-surface-container-highest)] shadow' : ''}`}>سبورة</button>
                         </div>
                     )}
                 </div>
             </header>
             <div className="flex-1 min-h-0 md:grid md:grid-cols-2 md:gap-4 md:p-4">
-                <div className={`h-full ${mobileView === 'whiteboard' && isWhiteboardActive ? 'hidden' : ''} md:flex flex-col`}>
+                <div className={`${mobileView === 'whiteboard' && isWhiteboardActive ? 'hidden' : ''} md:flex flex-col min-h-0`}>
                     <ChatView
                         modelId={ModelId.QUALITY}
                         systemInstructionOverride={ALGERIAN_TEACHER_RESOURCES.systemInstruction}
@@ -309,7 +310,7 @@ const ChatWithWhiteboard: React.FC<{onBack: () => void}> = ({onBack}) => {
                         onNewMessages={handleNewMessages}
                      />
                 </div>
-                 <div className={`h-full ${mobileView === 'chat' ? 'hidden' : ''} md:flex flex-col`}>
+                 <div className={`${mobileView === 'chat' ? 'hidden' : ''} md:flex flex-col min-h-0`}>
                     <Whiteboard steps={whiteboardSteps} />
                 </div>
             </div>
@@ -336,34 +337,29 @@ export const AlgerianTeacherApp: React.FC<AlgerianTeacherAppProps> = ({ onBack }
             case 'home':
             default:
                 return (
-                    <div className="flex-1 flex flex-col items-center justify-center p-4 overflow-y-auto">
+                    <div className="flex-1 flex flex-col items-center p-4 pt-24 pb-4 overflow-y-auto">
                          <header className="absolute top-0 left-0 p-4">
-                            <button onClick={onBack} className="p-2 rounded-full bg-black/10 hover:bg-black/20 text-white transition-colors backdrop-blur-sm">
+                            <button onClick={onBack} className="p-2 rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors backdrop-blur-sm">
                                 <ArrowLeftIcon className="w-6 h-6 transform scale-x-[-1]" />
                             </button>
                         </header>
                         <h1 className="text-3xl md:text-4xl font-bold text-white text-center" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>مساعدك الدراسي للسنة الرابعة متوسط</h1>
                         <ExamCountdown />
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-                            <button onClick={() => setPage('chat')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-lg sm:text-xl font-semibold">الأستاذ</span>
-                                <MessageSquareIcon className="w-8 h-8 sm:w-10 sm:h-10" />
-                            </button>
-                             <button onClick={() => setPage('books')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-lg sm:text-xl font-semibold">الكتب</span>
-                                <BookIcon className="w-8 h-8 sm:w-10 sm:h-10" />
-                            </button>
-                             <button onClick={() => setPage('lessons')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-lg sm:text-xl font-semibold">الملخصات</span>
-                                 <FileTextIcon className="w-8 h-8 sm:w-10 sm:h-10" />
-                            </button>
-                            <button onClick={() => setPage('websites')} className="px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-lg sm:text-xl font-semibold">مواقع تعليمية</span>
-                                <GlobeIcon className="w-8 h-8 sm:w-10 sm:h-10" />
-                            </button>
-                            <button onClick={() => setPage('calculator')} className="sm:col-span-2 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all text-gray-800">
-                                <span className="text-lg sm:text-xl font-semibold">حساب المعدل</span>
-                                <CalculatorIcon className="w-8 h-8 sm:w-10 sm:h-10" />
+                        <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
+                             {[
+                                { page: 'chat', label: 'الأستاذ', Icon: MessageSquareIcon },
+                                { page: 'books', label: 'الكتب', Icon: BookIcon },
+                                { page: 'lessons', label: 'الملخصات', Icon: FileTextIcon },
+                                { page: 'websites', label: 'مواقع تعليمية', Icon: GlobeIcon },
+                            ].map(({ page, label, Icon }) => (
+                                <button key={page} onClick={() => setPage(page as any)} className="group p-4 flex flex-col items-center justify-center gap-4 bg-white/30 backdrop-blur-md rounded-3xl shadow-lg hover:shadow-xl hover:bg-white/50 transition-all duration-300 text-white hover:text-gray-800">
+                                    <Icon className="w-10 h-10 sm:w-12 sm:h-12 transition-transform duration-300 group-hover:scale-110" />
+                                    <span className="text-lg sm:text-xl font-semibold transition-colors">{label}</span>
+                                </button>
+                            ))}
+                            <button onClick={() => setPage('calculator')} className="col-span-2 group p-4 flex items-center justify-center gap-4 bg-white/30 backdrop-blur-md rounded-3xl shadow-lg hover:shadow-xl hover:bg-white/50 transition-all duration-300 text-white hover:text-gray-800">
+                                <CalculatorIcon className="w-10 h-10 sm:w-12 sm:h-12 transition-transform duration-300 group-hover:scale-110" />
+                                <span className="text-lg sm:text-xl font-semibold transition-colors">حساب المعدل</span>
                             </button>
                         </div>
                     </div>
@@ -373,7 +369,7 @@ export const AlgerianTeacherApp: React.FC<AlgerianTeacherAppProps> = ({ onBack }
     
     return (
         <div className="h-full w-full font-teacher relative bg-cover bg-center" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=2832&auto=format&fit=crop')` }}>
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black/50" />
             <div className="relative h-full w-full flex flex-col">
                 {showSplash ? <Splash onFinished={() => setShowSplash(false)} /> : <div key={page} className="animate-fade-in h-full w-full"><MainContent /></div>}
             </div>

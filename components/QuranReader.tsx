@@ -281,22 +281,22 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ scrollToLocation, onSc
     };
 
     if (isLoading) {
-        return <div className="bg-gradient-to-br from-green-50 to-yellow-50 dark:from-green-900/50 dark:to-yellow-900/50 rounded-xl border border-yellow-200 dark:border-yellow-700/50 flex items-center justify-center h-full"><p className="text-yellow-600 dark:text-yellow-300 text-lg animate-pulse">جارِ تحميل القرآن الكريم...</p></div>;
+        return <div className="bg-gradient-to-br from-green-50 to-yellow-50 dark:from-green-900/50 dark:to-yellow-900/50 rounded-2xl border border-yellow-200 dark:border-yellow-700/50 flex items-center justify-center h-full"><p className="text-yellow-600 dark:text-yellow-300 text-lg animate-pulse">جارِ تحميل القرآن الكريم...</p></div>;
     }
 
     return (
-        <div className="relative quran-background dark:bg-gray-900 rounded-xl border border-yellow-300/50 dark:border-yellow-600/50 flex flex-col h-full overflow-hidden">
+        <div className="relative quran-background dark:quran-background rounded-2xl border border-yellow-300/50 dark:border-yellow-600/50 flex flex-col h-full overflow-hidden">
             <div className="p-3 border-b border-yellow-300/50 dark:border-yellow-600/50 z-10 bg-white/50 dark:bg-black/30 backdrop-blur-sm">
                 <h2 className="text-lg md:text-xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-yellow-600 dark:from-green-400 dark:to-yellow-400">القرآن الكريم</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    <select value={selectedSurahNumber} onChange={(e) => setSelectedSurahNumber(Number(e.target.value))} className="w-full p-2 bg-white/50 dark:bg-black/20 border border-yellow-300/50 dark:border-yellow-600/50 rounded-lg text-yellow-800 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                    <select value={selectedSurahNumber} onChange={(e) => setSelectedSurahNumber(Number(e.target.value))} className="w-full p-2 bg-[var(--token-surface-container)] border border-[var(--token-outline-variant)] rounded-lg text-[var(--token-on-surface-variant)] focus:outline-none focus:ring-2 focus:ring-yellow-500">
                         {quranData.map(surah => <option key={surah.number} value={surah.number}>{`${surah.number}. ${surah.name}`}</option>)}
                     </select>
                      <div className="flex gap-2">
-                        <select value={selectedReciter} onChange={e => setSelectedReciter(e.target.value)} className="flex-grow p-2 bg-white/50 dark:bg-black/20 border border-yellow-300/50 dark:border-yellow-600/50 rounded-lg text-yellow-800 dark:text-yellow-200 focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <select value={selectedReciter} onChange={e => setSelectedReciter(e.target.value)} className="flex-grow p-2 bg-[var(--token-surface-container)] border border-[var(--token-outline-variant)] rounded-lg text-[var(--token-on-surface-variant)] focus:outline-none focus:ring-2 focus:ring-yellow-500">
                             {RECITERS.map(reciter => <option key={reciter.id} value={reciter.id}>{reciter.name}</option>)}
                         </select>
-                        <button onClick={() => setIsBookMode(prev => !prev)} className={`px-3 flex-shrink-0 rounded-lg border transition-colors ${isBookMode ? 'bg-yellow-100 dark:bg-yellow-900/50 border-yellow-400 text-yellow-600 dark:text-yellow-300' : 'bg-white/50 dark:bg-black/20 border-yellow-300/50 dark:border-yellow-600/50 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30'}`} aria-label="Book Mode">
+                        <button onClick={() => setIsBookMode(prev => !prev)} className={`px-3 flex-shrink-0 rounded-lg border transition-colors ${isBookMode ? 'bg-yellow-100 dark:bg-yellow-900/50 border-yellow-400 text-yellow-600 dark:text-yellow-300' : 'bg-transparent border-[var(--token-outline-variant)] text-[var(--token-on-surface-variant)] hover:bg-yellow-100/50 dark:hover:bg-yellow-900/30'}`} aria-label="Book Mode">
                             <BookIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -343,8 +343,8 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ scrollToLocation, onSc
                 <div className="max-w-xs mx-auto flex items-center justify-around gap-2 text-yellow-800 dark:text-yellow-200">
                      <button onClick={handleStop} className="p-2 rounded-full hover:bg-yellow-400/20 transition-colors" aria-label="إيقاف"><StopCircleIcon className="w-6 h-6" /></button>
                      <button onClick={handlePlayPrev} disabled={!currentAyah} className="p-2 rounded-full hover:bg-yellow-400/20 transition-colors disabled:opacity-50" aria-label="الآية السابقة"><SkipBackIcon className="w-6 h-6" /></button>
-                     <button onClick={handleTogglePlay} className="w-12 h-12 flex items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-yellow-500 text-white hover:opacity-90 transition-opacity shadow-lg" aria-label={isPlaying ? "إيقاف مؤقت" : "تشغيل"}>
-                        {isPlaying ? <PauseIcon className="w-7 h-7" /> : <PlayIcon className="w-7 h-7 ml-1" />}
+                     <button onClick={handleTogglePlay} className="w-14 h-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-green-500 to-yellow-500 text-white hover:opacity-90 transition-opacity shadow-lg" aria-label={isPlaying ? "إيقاف مؤقت" : "تشغيل"}>
+                        {isPlaying ? <PauseIcon className="w-8 h-8" /> : <PlayIcon className="w-8 h-8 ml-1" />}
                      </button>
                      <button onClick={handlePlayNext} disabled={!currentAyah} className="p-2 rounded-full hover:bg-yellow-400/20 transition-colors disabled:opacity-50" aria-label="الآية التالية"><SkipForwardIcon className="w-6 h-6" /></button>
                      <div className="w-10 h-10 flex-shrink-0"></div>

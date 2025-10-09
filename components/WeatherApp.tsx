@@ -83,7 +83,7 @@ const getWindDirectionRotation = (dir: string) => {
 };
 
 const DetailCard: React.FC<{ title: string; Icon: React.FC<any>; children: React.ReactNode; }> = ({ title, Icon, children }) => (
-    <div className="p-4 bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+    <div className="p-4 bg-[var(--token-surface-variant)]/20 backdrop-blur-lg border border-white/10 rounded-3xl">
         <div className="flex items-center gap-2 text-sm opacity-80 mb-2">
             <Icon className="w-4 h-4" />
             <span>{title}</span>
@@ -153,7 +153,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
                             value={query}
                             onChange={e => setQuery(e.target.value)}
                             placeholder="ابحث عن مدينة..."
-                            className="w-full p-3 bg-black/20 border border-white/20 rounded-full text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all backdrop-blur-sm"
+                            className="w-full p-3 bg-white/20 border border-white/20 rounded-full text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent transition-all backdrop-blur-sm"
                         />
                     </form>
 
@@ -163,17 +163,17 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
                     {weatherData && (
                         <div className="space-y-6 animate-fade-in">
                              <div className="text-center flex flex-col items-center">
-                                <h2 className="text-3xl font-bold drop-shadow-lg">{weatherData.location}</h2>
-                                <p className="font-semibold text-lg drop-shadow-md mt-1">{weatherData.current.condition}</p>
-                                <p className="text-8xl font-thin my-2 drop-shadow-xl">{Math.round(weatherData.current.temp_c)}°</p>
-                                <p className="text-sm opacity-90">
+                                <h2 className="text-4xl font-normal drop-shadow-lg">{weatherData.location.split(',')[0]}</h2>
+                                <p className="text-xl font-light drop-shadow-md mt-1">{weatherData.current.condition}</p>
+                                <p className="text-9xl font-thin my-2 drop-shadow-xl">{Math.round(weatherData.current.temp_c)}°</p>
+                                <p className="text-md opacity-90">
                                     <span> الأعلى: {Math.round(weatherData.forecast_daily[0].maxtemp_c)}°</span>
                                     <span className="mx-2">|</span>
                                     <span> الأدنى: {Math.round(weatherData.forecast_daily[0].mintemp_c)}°</span>
                                 </p>
                             </div>
 
-                            <div className="p-4 bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+                            <div className="p-4 bg-[var(--token-surface-variant)]/20 backdrop-blur-lg border border-white/10 rounded-3xl">
                                 <h3 className="text-sm font-semibold opacity-80 mb-3 border-b border-white/20 pb-2">توقعات الساعات القادمة</h3>
                                 <div className="flex overflow-x-auto gap-4 -mb-2 pb-2">
                                     {weatherData.forecast_hourly.map(hour => (
@@ -191,7 +191,7 @@ export const WeatherApp: React.FC<WeatherAppProps> = ({ onBack }) => {
                                 </div>
                             </div>
                             
-                             <div className="p-4 bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl">
+                             <div className="p-4 bg-[var(--token-surface-variant)]/20 backdrop-blur-lg border border-white/10 rounded-3xl">
                                 <h3 className="text-sm font-semibold opacity-80 mb-2 border-b border-white/20 pb-2">التوقعات للأيام القادمة</h3>
                                 <div className="space-y-3">
                                     {weatherData.forecast_daily.map(day => (
