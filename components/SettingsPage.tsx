@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { ArrowLeftIcon, SunIcon, MoonIcon, LaptopIcon, TrashIcon, MicrophoneIcon } from './Icons';
-import { Theme, FontFamily } from '../types';
+import { Theme } from '../types';
 
 interface SettingsPageProps {
     onBack: () => void;
@@ -27,13 +27,6 @@ const FONT_SIZES = [
     { name: 'كبير', value: '18px' },
 ];
 
-const FONT_FAMILIES = [
-    { name: 'أساسي', value: 'sans' },
-    { name: 'عريض', value: 'serif' },
-    { name: 'ملاحظات', value: 'sans-alt' },
-    { name: 'أحادي', value: 'mono-alt' },
-];
-
 const ToggleSwitch: React.FC<{ enabled: boolean, onChange: (enabled: boolean) => void }> = ({ enabled, onChange }) => (
     <button
         onClick={() => onChange(!enabled)}
@@ -47,7 +40,6 @@ const ToggleSwitch: React.FC<{ enabled: boolean, onChange: (enabled: boolean) =>
 export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
     const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'system');
     const [fontSize, setFontSize] = useState(() => localStorage.getItem('fontSize') || '16px');
-    const [fontFamily, setFontFamily] = useState<FontFamily>(() => (localStorage.getItem('fontFamily') as FontFamily) || 'sans');
     const [micPermission, setMicPermission] = useState(() => localStorage.getItem('permission_mic') === 'true');
 
     useEffect(() => {
@@ -69,23 +61,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
 
     useEffect(() => {
         const rootStyle = document.documentElement.style;
-        localStorage.setItem('fontFamily', fontFamily);
-        switch(fontFamily) {
-            case 'serif':
-                rootStyle.setProperty('--font-family-sans', 'var(--font-family-serif)');
-                break;
-            case 'sans-alt':
-                rootStyle.setProperty('--font-family-sans', "'Noto Sans', sans-serif");
-                break;
-            case 'mono-alt':
-                 rootStyle.setProperty('--font-family-sans', "'Roboto', monospace");
-                 break;
-            case 'sans':
-            default:
-                rootStyle.setProperty('--font-family-sans', "'IBM Plex Sans Arabic', sans-serif");
-                break;
-        }
-    }, [fontFamily]);
+        // The main font is now controlled by the --font-family-sans variable in index.html
+        // This component only needs to manage theme and font size.
+    }, []);
     
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -155,24 +133,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onBack }) => {
                                         onClick={() => setFontSize(value)}
                                         className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors duration-200 ${
                                             fontSize === value
-                                                ? 'bg-[var(--token-main-surface-primary)] text-[var(--token-text-primary)] shadow-sm'
-                                                : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-primary)]/50'
-                                        }`}
-                                    >
-                                        {name}
-                                    </button>
-                                ))}
-                             </div>
-                        </SettingsItem>
-                         <SettingsItem>
-                            <span className="text-base text-[var(--token-text-primary)]">نمط الخط</span>
-                             <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-main-surface-tertiary)]">
-                                {FONT_FAMILIES.map(({name, value}) => (
-                                     <button
-                                        key={value}
-                                        onClick={() => setFontFamily(value as FontFamily)}
-                                        className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors duration-200 ${
-                                            fontFamily === value
                                                 ? 'bg-[var(--token-main-surface-primary)] text-[var(--token-text-primary)] shadow-sm'
                                                 : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-primary)]/50'
                                         }`}

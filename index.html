@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Noto+Sans:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=El+Messiri:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=El+Messiri:wght@400;500;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" integrity="sha384-KiWOvVjnN8qwZu2pzTTa9XWbMhuPclFaVjlDEImfaq2zE6v+lrN+rY6oN//g6fF5" crossorigin="anonymous">
     <style>
       :root {
@@ -68,8 +68,8 @@
         
         /* Font settings */
         --font-size-base: 16px;
-        --font-family-sans: 'IBM Plex Sans Arabic', sans-serif;
-        --font-family-serif: 'Amiri', serif;
+        --font-family-sans: 'Tajawal', sans-serif;
+        --font-family-quran: 'Scheherazade New', serif;
       }
       html.dark {
         /* Material Design 3 Dark Theme Tokens */
@@ -136,24 +136,68 @@
         color: var(--token-text-primary);
       }
       .font-quran {
-        font-family: 'Amiri', serif;
+        font-family: var(--font-family-quran);
       }
-      .font-serif {
-        font-family: var(--font-family-serif);
-      }
-      .font-sans-alt {
-         font-family: 'Noto Sans', sans-serif;
-      }
-       .font-mono-alt {
-         font-family: 'Roboto', monospace;
-       }
-       .font-teacher {
+      .font-teacher {
           font-family: 'El Messiri', sans-serif;
-       }
+      }
        .font-islamic {
           font-family: 'El Messiri', sans-serif;
        }
+       
+      /* MD3 Table Styles */
+      .prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.5em 0;
+        font-size: 0.9em;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--token-outline-variant);
+        box-shadow: none;
+      }
+      .prose thead tr {
+        background-color: var(--token-surface-container);
+        color: var(--token-on-surface);
+        text-align: right;
+        font-weight: 600;
+      }
+      .prose th, .prose td {
+        padding: 12px 16px;
+        border: none;
+      }
+      .prose tbody tr {
+        border-bottom: 1px solid var(--token-outline-variant);
+      }
+      .prose tbody tr:nth-of-type(even) {
+        background-color: var(--token-surface-container-low);
+      }
+      .prose tbody tr:last-of-type {
+        border-bottom: none;
+      }
+      .prose tbody tr:hover {
+        background-color: var(--token-surface-container-high);
+      }
 
+      /* Highlight Styles */
+      .prose mark {
+        background-color: var(--token-tertiary-container);
+        color: var(--token-on-tertiary-container);
+        padding: 0.1em 0.3em;
+        border-radius: 4px;
+      }
+      .prose mark.highlight-blue {
+        background-color: var(--token-primary-container);
+        color: var(--token-on-primary-container);
+      }
+       .prose mark.highlight-green {
+        background-color: #C8FDD7;
+        color: #00210A;
+      }
+      html.dark .prose mark.highlight-green {
+        background-color: #005323;
+        color: #AEF6B9;
+      }
 
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
@@ -192,7 +236,6 @@
       .katex-display > .katex {
         font-size: 1.25em !important;
       }
-      /* Ensure scrollbars look decent on webkit browsers */
       .katex-display::-webkit-scrollbar {
         height: 8px;
       }
@@ -295,11 +338,11 @@
 
       .quran-background {
         background-color: #f7f3e9;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.1'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       }
       html.dark .quran-background {
         background-color: #1a160d;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23FBBF24' fill-opacity='0.08'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23FBBF24' fill-opacity='0.08'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3Cpath d='M6 5V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h4V0h1v5h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v4h5v1h-5v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5h-1v-5h-4v5H6v-5H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6v-4H0v-1h6V6h-1V5h-1V4h1V3h1V2h-1V1h-1V0h-1v1H5v1H4v1H3v1H2v1H1v1H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4H0v1h1v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-4h4v4h1v-5h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h-1v-4h1v-h1v-1h1v-1h1v-1h1V6h-4V5zm-1 5v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-5 0v4h-4v-4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-4-5h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm5 0h4v-4h-4v4zm4-5v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4zm-5 0v-4h-4v4h4z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       }
       
       /* Page transitions */
@@ -398,6 +441,66 @@
           background-color: var(--token-secondary-container);
           color: var(--token-on-secondary-container);
       }
+
+      /* Responsive Grade Calculator */
+      @media (max-width: 768px) {
+        .responsive-grade-table thead {
+            display: none;
+        }
+        .responsive-grade-table tbody,
+        .responsive-grade-table tr {
+            display: block;
+            width: 100%;
+        }
+        .responsive-grade-table tr {
+            margin-bottom: 1rem;
+            border: 1px solid var(--token-outline-variant);
+            border-radius: 16px;
+            overflow: hidden;
+            background-color: var(--token-surface-container);
+        }
+        .responsive-grade-table td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--token-outline-variant);
+        }
+        .responsive-grade-table td:first-child { /* Subject Name */
+            background-color: var(--token-surface-container-high);
+            padding: 1rem;
+            font-size: 1.1rem;
+            justify-content: space-between;
+        }
+        .responsive-grade-table td:first-child .form-input {
+            text-align: right;
+            font-weight: 700;
+        }
+        .responsive-grade-table td:last-child { /* Actions cell */
+            border-bottom: none;
+            justify-content: center;
+            padding: 0.5rem;
+            background-color: var(--token-surface-container-low);
+        }
+        .responsive-grade-table td::before {
+            content: attr(data-label);
+            font-weight: 500;
+            color: var(--token-on-surface);
+            flex-basis: 40%;
+            text-align: right;
+        }
+        .responsive-grade-table td:first-child::before {
+            display: none;
+        }
+        .responsive-grade-table td .form-input {
+            max-width: 120px;
+        }
+        .responsive-grade-table td[data-label="المعدل"],
+        .responsive-grade-table td[data-label="المجموع"] {
+            font-weight: 700;
+        }
+      }
+
     </style>
      <script>
       // Basic dark mode handling to prevent FOUC

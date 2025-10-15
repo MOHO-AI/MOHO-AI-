@@ -4,7 +4,7 @@ import type { GenerateContentResponse } from '@google/genai';
 import { MODELS } from '../constants';
 import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking, WhiteboardStep } from '../types';
 import { MessageRenderer } from './MessageRenderer';
-import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, BrainIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon, GoogleIcon } from './Icons';
+import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, ThinkingIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon, GoogleIcon } from './Icons';
 import QRCode from 'qrcode';
 
 declare global {
@@ -104,36 +104,64 @@ const LoadingIndicator: React.FC = () => (
 // This function centralizes all parsing of special content from the model's response.
 const parseMessageContent = async (rawContent: string): Promise<Partial<Message>> => {
     let content = rawContent;
-    
-    let qrCodeSVG: string | null = null;
-    let chartData: ChartData | null = null;
+    const componentPlaceholders: NonNullable<Message['componentPlaceholders']> = {};
     let deepThinking: DeepThinking | null = null;
     let designContent: string | null = null;
     let whiteboardSteps: WhiteboardStep[] | null = null;
-    const mermaidCodes: string[] = [];
     let statusWidget: Message['statusWidget'] = null;
 
-    // QR Code
-    const qrRegex = /\[QR_CODE_GENERATE:({.*?})\]\s*/g;
-    const lastQrMatch = [...content.matchAll(qrRegex)].pop(); // Get the last match
-    if (lastQrMatch) {
-        try {
-            const payload = JSON.parse(lastQrMatch[1]);
-            if (payload.content) {
-                qrCodeSVG = await QRCode.toString(payload.content, {
-                    type: 'svg', margin: 2,
-                    color: { dark: document.documentElement.classList.contains('dark') ? '#E3E3E3' : '#1F1F1F', light: '#00000000' }
-                });
-                // If successful, strip all QR commands
-                content = content.replace(qrRegex, '');
+    // Helper to process and replace all occurrences of a pattern with a placeholder
+    const processComponentBlocks = async (
+        regex: RegExp,
+        type: 'qr' | 'chart' | 'mermaid',
+        parser: (blockContent: string) => Promise<any>
+    ) => {
+        const matches = [...content.matchAll(regex)];
+        if (matches.length === 0) return;
+
+        let tempContent = content;
+        let allSucceeded = true;
+
+        for (const match of matches) {
+            const blockContent = match[1];
+            try {
+                const data = await parser(blockContent);
+                const id = `component-${Date.now()}-${Math.random()}`;
+                componentPlaceholders[id] = { type, data };
+                // FIX: Replace with a div placeholder surrounded by newlines to ensure it's treated as a block element
+                const placeholder = `\n\n<div data-component-id="${id}"></div>\n\n`;
+                tempContent = tempContent.replace(match[0], placeholder);
+            } catch (e) {
+                console.warn(`Could not parse component block type ${type}, might be streaming.`, e);
+                allSucceeded = false;
+                break; // Stop processing this type if one block fails (likely due to streaming)
             }
-        } catch (e) {
-            // Incomplete JSON, will be re-parsed on next chunk
-            console.warn("Could not parse QR code JSON yet, might be streaming.", e);
         }
-    }
+        
+        // Only update content if all blocks of this type were successfully parsed
+        if (allSucceeded) {
+            content = tempContent;
+        }
+    };
+
+    // Define parsers for each component type
+    const qrParser = async (blockContent: string) => {
+        const payload = JSON.parse(blockContent);
+        if (!payload.content) throw new Error("QR payload has no content");
+        return QRCode.toString(payload.content, {
+            type: 'svg', margin: 2, width: 220,
+            color: { dark: '#1F1F1F', light: '#00000000' }
+        });
+    };
+    const chartParser = async (blockContent: string) => JSON.parse(blockContent);
+    const mermaidParser = async (blockContent: string) => blockContent;
+
+    // Process all component types
+    await processComponentBlocks(/\[QR_CODE_GENERATE:({.*?})\]/g, 'qr', qrParser);
+    await processComponentBlocks(/```json:chart\n([\s\S]*?)\n```/g, 'chart', chartParser);
+    await processComponentBlocks(/```mermaid\n([\s\S]*?)\n```/g, 'mermaid', mermaidParser);
     
-    // Helper to extract a block and remove it from content
+    // Helper to extract a block and remove it from content (for non-inline components)
     const extractBlock = (regex: RegExp): string | null => {
         const match = content.match(regex);
         if (match && match[1]) {
@@ -143,19 +171,7 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         return null;
     };
     
-    // Charts
-    const chartJson = extractBlock(/```json:chart\n([\s\S]*?)\n```/);
-    if (chartJson) {
-        try { 
-            chartData = JSON.parse(chartJson); 
-        } catch (e) { 
-            console.error("Failed to parse chart JSON:", e);
-            // Restore content on failure to allow re-parsing
-            content = `\`\`\`json:chart\n${chartJson}\n\`\`\`\n` + content; 
-        }
-    }
-    
-    // Deep Thinking
+    // Deep Thinking (not inline)
     const dtBlock = extractBlock(/\*\*\[DEEP_THINKING_START\]\*\*\n([\s\S]*?)\n\*\*\[DEEP_THINKING_END\]\*\*/);
     if (dtBlock) {
         const methodMatch = dtBlock.match(/\*\*المنهجية:\*\*\s*(.*)/);
@@ -163,12 +179,11 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         if (methodMatch && planMatch) {
             deepThinking = { method: methodMatch[1].trim(), plan: planMatch[1].trim().split('\n').map(s => s.replace(/-\s*/, '').trim()).filter(Boolean) };
         } else {
-             // Restore content on failure to allow re-parsing
              content = `**[DEEP_THINKING_START]**\n${dtBlock}\n**[DEEP_THINKING_END]**\n` + content;
         }
     }
     
-    // Whiteboard - find all blocks, parse them, and replace if all are valid
+    // Whiteboard (not inline)
     const whiteboardRegex = /\[WHITEBOARD_START\]\s*([\s\S]*?)\s*\[WHITEBOARD_END\]/g;
     const whiteboardMatches = [...content.matchAll(whiteboardRegex)];
     if (whiteboardMatches.length > 0) {
@@ -179,34 +194,24 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
             try {
                 const parsed = JSON.parse(jsonString);
                 if (Array.isArray(parsed)) {
-                    // Flatten to handle cases where the model might wrap the array in another array, e.g., [[...]]
                     tempSteps.push(...parsed.flat()); 
                 }
             } catch (e) {
                 parsingFailed = true;
                 console.warn("Incomplete or invalid whiteboard JSON, will retry on next chunk.", e);
-                break; // Stop parsing if any block is invalid, assuming it's an incomplete stream.
+                break;
             }
         }
-
         if (!parsingFailed && tempSteps.length > 0) {
             whiteboardSteps = tempSteps;
             content = content.replace(whiteboardRegex, '').trim();
         }
     }
 
-    // Design
+    // Design (not inline)
     designContent = extractBlock(/```html:design\n([\s\S]*?)\n```/);
     
-    // Mermaid
-    const mermaidRegex = /```mermaid\n([\s\S]*?)\n```/g;
-    const mermaidMatches = [...content.matchAll(mermaidRegex)];
-    if (mermaidMatches.length > 0) {
-        mermaidMatches.forEach(match => mermaidCodes.push(match[1]));
-        content = content.replace(mermaidRegex, '');
-    }
-    
-    // Weather and Prayer Status Widgets
+    // Status Widgets (not inline)
     content = content.replace(/\[FETCH_WEATHER\]\s*/g, () => {
         statusWidget = { type: 'weather' };
         return '';
@@ -216,7 +221,7 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         return '';
     });
     
-    return { content, chartData, deepThinking, designContent, mermaidCodes, qrCodeSVG, whiteboardSteps, statusWidget };
+    return { content, componentPlaceholders, deepThinking, designContent, whiteboardSteps, statusWidget };
 };
 
 
@@ -765,7 +770,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                     )}
                                     {currentModel.features.deepThinking && (
                                         <button type="button" onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isDeepThinkingEnabled ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل التفكير العميق">
-                                            <BrainIcon className="w-3.5 h-3.5"/> <span>تفكير عميق</span>
+                                            <ThinkingIcon className="w-3.5 h-3.5"/> <span>تفكير عميق</span>
                                         </button>
                                     )}
                                     {currentModel.features.webSearch && (
@@ -784,6 +789,5 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 </form>
             </div>
         </div>
-    </div>
-  );
+    );
 };

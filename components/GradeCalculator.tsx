@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeftIcon } from './Icons';
+import { ArrowLeftIcon, PlusIcon, TrashIcon } from './Icons';
 
 interface Subject {
     name: string;
@@ -30,31 +30,28 @@ interface GradeCalculatorProps {
 }
 
 export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
-    const [subjects, setSubjects] = useState<Subject[]>(INITIAL_SUBJECTS);
+    const [subjects, setSubjects] = useState<Subject[]>(JSON.parse(JSON.stringify(INITIAL_SUBJECTS)));
     const [showResults, setShowResults] = useState(false);
 
-    const handleInputChange = (index: number, field: 'activities' | 'test1' | 'exam', value: string) => {
+    const handleInputChange = (index: number, field: keyof Subject, value: string) => {
         const newSubjects = [...subjects];
-        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-            newSubjects[index] = { ...newSubjects[index], [field]: value };
-            setSubjects(newSubjects);
+        if (field === 'coeff' || field === 'name') {
+             newSubjects[index] = { ...newSubjects[index], [field]: value };
+        } else {
+             if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                newSubjects[index] = { ...newSubjects[index], [field]: value };
+            }
         }
-    };
-    
-    const handleCoeffChange = (index: number, value: string) => {
-        const newSubjects = [...subjects];
-        if (value === '') {
-            newSubjects[index] = { ...newSubjects[index], coeff: 0 };
-            setSubjects(newSubjects);
-            return;
-        }
-        const numValue = parseInt(value, 10);
-        if (!isNaN(numValue) && numValue >= 0 && numValue <= 10) {
-            newSubjects[index] = { ...newSubjects[index], coeff: numValue };
-            setSubjects(newSubjects);
-        }
+        setSubjects(newSubjects);
     };
 
+    const handleAddSubject = () => {
+        setSubjects([...subjects, { name: 'مادة جديدة', coeff: 1, activities: '', test1: '', exam: '' }]);
+    };
+
+    const handleRemoveSubject = (indexToRemove: number) => {
+        setSubjects(subjects.filter((_, index) => index !== indexToRemove));
+    };
 
     const calculationResults = useMemo(() => {
         let overallTotalPoints = 0;
@@ -67,7 +64,7 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
             const coeff = subject.coeff || 0;
 
             const continuousAssessmentAvg = (activities + test1) / 2;
-            const subjectAvg = (continuousAssessmentAvg + exam * 0.5) / 2; // Exam is on 40, so we take half
+            const subjectAvg = (continuousAssessmentAvg + exam * 2) / 3;
             const subjectTotal = subjectAvg * coeff;
 
             if (coeff > 0) {
@@ -97,13 +94,12 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
     };
 
     const handleReset = () => {
-        // Create a deep copy to avoid reference issues
         setSubjects(JSON.parse(JSON.stringify(INITIAL_SUBJECTS)));
         setShowResults(false);
     };
 
     return (
-        <div className="h-full flex flex-col bg-[var(--token-surface-container)] text-[var(--token-on-surface)]" style={{fontFamily: "'Tajawal', sans-serif"}}>
+        <div className="h-full flex flex-col bg-[var(--token-surface-container)] text-[var(--token-on-surface)]">
             <header className="p-2 flex items-center gap-2 border-b border-[var(--token-border-default)] flex-shrink-0 bg-[var(--token-main-surface-primary)]">
                 <button onClick={onBack} className="p-2 rounded-full hover:bg-[var(--token-main-surface-tertiary)]"><ArrowLeftIcon className="w-5 h-5 transform scale-x-[-1]" /></button>
                 <h1 className="text-xl font-bold">حاسبة المعدل الدراسي</h1>
@@ -111,32 +107,50 @@ export const GradeCalculator: React.FC<GradeCalculatorProps> = ({ onBack }) => {
             <div className="flex-1 overflow-y-auto p-4 md:p-8">
                  <div className="card p-4 sm:p-6 md:p-8 max-w-7xl mx-auto">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full w-full text-center">
+                        <table className="min-w-full w-full text-center responsive-grade-table">
                             <thead className="text-sm">
                                 <tr className="table-header">
-                                    <th className="p-3 rounded-tr-2xl">المادة</th>
+                                    <th className="p-3 rounded-tr-2xl w-1/4">المادة</th>
                                     <th className="p-3">تقويم</th>
                                     <th className="p-3">الفرض</th>
                                     <th className="p-3">الاختبار</th>
                                     <th className="p-3">المعامل</th>
                                     <th className="p-3">المعدل</th>
-                                    <th className="p-3 rounded-tl-2xl">المجموع</th>
+                                    <th className="p-3">المجموع</th>
+                                    <th className="p-3 rounded-tl-2xl"></th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-[var(--token-outline-variant)]">
+                            <tbody className="md:divide-y md:divide-[var(--token-outline-variant)]">
                                 {calculationResults.subjectsWithAvg.map((subject, index) => (
-                                     <tr key={index} className="hover:bg-[var(--token-surface-container)] transition-colors">
-                                        <td className="p-2 font-semibold text-[var(--token-on-surface-variant)]">{subject.name}</td>
-                                        <td className="p-2"><input type="number" value={subject.activities} onChange={e => handleInputChange(index, 'activities', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.test1} onChange={e => handleInputChange(index, 'test1', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.exam} onChange={e => handleInputChange(index, 'exam', e.target.value)} className="form-input" placeholder="40" min="0" max="40" step="0.25" /></td>
-                                        <td className="p-2"><input type="number" value={subject.coeff} onChange={e => handleCoeffChange(index, e.target.value)} className="form-input" min="0" max="10" step="1" /></td>
-                                        <td className="p-2 font-bold text-[var(--token-primary)]">{subject.subjectAvg}</td>
-                                        <td className="p-2 font-bold text-[var(--token-on-surface)]">{subject.subjectTotal}</td>
+                                     <tr key={index} className="md:hover:bg-[var(--token-surface-container)] transition-colors">
+                                        <td className="p-2 font-semibold text-[var(--token-on-surface-variant)]">
+                                            <input type="text" value={subject.name} onChange={e => handleInputChange(index, 'name', e.target.value)} className="form-input font-semibold" style={{backgroundColor: 'transparent', border: 'none'}} />
+                                            <button onClick={() => handleRemoveSubject(index)} className="md:hidden p-2 text-red-500 hover:bg-red-500/10 rounded-full" aria-label="حذف المادة">
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        </td>
+                                        <td data-label="تقويم" className="p-2"><input type="number" value={subject.activities} onChange={e => handleInputChange(index, 'activities', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
+                                        <td data-label="الفرض" className="p-2"><input type="number" value={subject.test1} onChange={e => handleInputChange(index, 'test1', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
+                                        <td data-label="الاختبار" className="p-2"><input type="number" value={subject.exam} onChange={e => handleInputChange(index, 'exam', e.target.value)} className="form-input" placeholder="20" min="0" max="20" step="0.25" /></td>
+                                        <td data-label="المعامل" className="p-2"><input type="number" value={subject.coeff} onChange={e => handleInputChange(index, 'coeff', e.target.value)} className="form-input" min="0" max="10" step="1" /></td>
+                                        <td data-label="المعدل" className="p-2 font-bold text-[var(--token-primary)]">{subject.subjectAvg}</td>
+                                        <td data-label="المجموع" className="p-2 font-bold text-[var(--token-on-surface)]">{subject.subjectTotal}</td>
+                                        <td className="p-2 hidden md:table-cell">
+                                            <button onClick={() => handleRemoveSubject(index)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-full" aria-label="حذف المادة">
+                                                <TrashIcon className="w-5 h-5" />
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+
+                     <div className="flex justify-start mt-4">
+                        <button onClick={handleAddSubject} className="btn text-sm bg-transparent border border-[var(--token-outline)] text-[var(--token-on-surface-variant)] hover:bg-[var(--token-surface-container)]">
+                             <PlusIcon className="w-4 h-4 ml-2"/>
+                            إضافة مادة
+                        </button>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">

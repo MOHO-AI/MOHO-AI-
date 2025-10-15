@@ -67,9 +67,13 @@ const MermaidDiagram: React.FC<{ code: string }> = ({ code }) => {
     }, [code, uniqueId, showCode, isFullScreen]);
 
     const DiagramError = () => (
-        <div className="p-4 text-red-500 bg-red-500/10 h-full flex flex-col justify-center items-center">
+        <div className="p-4 text-red-500 bg-red-500/10 h-full w-full flex flex-col justify-center items-center text-right" dir="rtl">
             <h4 className="font-bold mb-2">خطأ في عرض المخطط</h4>
-            <pre className="text-xs whitespace-pre-wrap">{error}</pre>
+            <p className="text-xs mb-2 text-center">حدث خطأ أثناء تحليل الكود. قد يكون هناك خطأ في بناء الجملة.</p>
+            <details className="w-full text-left mt-2">
+                <summary className="text-xs cursor-pointer text-gray-500 dark:text-gray-400">التفاصيل الفنية</summary>
+                <pre className="mt-2 text-xs whitespace-pre-wrap bg-black/10 dark:bg-black/20 p-2 rounded-md font-mono">{`Message: ${error}\n\n--- Code ---\n${code}`}</pre>
+            </details>
         </div>
     );
     
@@ -491,11 +495,11 @@ const QrCodeDisplay: React.FC<{ svg: string }> = ({ svg }) => {
     };
 
     return (
-        <div className="my-4 p-4 bg-[var(--token-main-surface-primary)] rounded-xl border border-[var(--token-border-default)] flex flex-col items-center gap-4">
-            <div className="p-2 bg-white rounded-lg" dangerouslySetInnerHTML={{ __html: svg }} />
-            <button onClick={handleDownload} className="flex items-center gap-2 text-sm px-4 py-2 bg-[var(--token-main-surface-tertiary)] hover:bg-[var(--token-border-default)] rounded-lg font-semibold">
+        <div className="my-4 p-4 bg-[var(--token-surface-container)] rounded-2xl border border-[var(--token-border-default)] flex flex-col items-center gap-4">
+            <div className="p-3 bg-white rounded-lg shadow-inner" dangerouslySetInnerHTML={{ __html: svg }} />
+            <button onClick={handleDownload} className="flex items-center gap-2 text-sm px-4 py-2 bg-[var(--token-primary-container)] text-[var(--token-on-primary-container)] hover:opacity-90 rounded-full font-semibold">
                 <DownloadIcon className="w-4 h-4" />
-                تحميل
+                <span>تحميل SVG</span>
             </button>
         </div>
     );
@@ -629,13 +633,25 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
             onExecute={onExecuteResearch}
           />
         )}
-         {message.qrCodeSVG && <QrCodeDisplay svg={message.qrCodeSVG} />}
-         {message.mermaidCodes && message.mermaidCodes.map((code, index) => <MermaidDiagram key={index} code={code} />)}
-         {message.chartData && <ChartDisplay chartData={message.chartData} />}
         <ReactMarkdown
           rehypePlugins={[rehypeRaw, rehypeKatex]}
           remarkPlugins={[remarkGfm, remarkMath]}
           components={{
+            div: ({ node, ...props }: any) => {
+                const componentId = props['data-component-id'];
+                if (componentId && message.componentPlaceholders) {
+                    const componentData = message.componentPlaceholders[componentId];
+                    if (componentData) {
+                        switch (componentData.type) {
+                            case 'qr': return <QrCodeDisplay svg={componentData.data} />;
+                            case 'chart': return <ChartDisplay chartData={componentData.data} />;
+                            case 'mermaid': return <MermaidDiagram code={componentData.data} />;
+                            default: break;
+                        }
+                    }
+                }
+                return <div {...props} />;
+            },
             code: ({ node, inline, className, children, ...props }) => {
               const match = /language-(\w+)/.exec(className || '');
               return <CodeBlock language={match ? match[1] : undefined} inline={inline} {...props}>{children}</CodeBlock>

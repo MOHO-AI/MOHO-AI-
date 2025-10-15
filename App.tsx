@@ -14,6 +14,63 @@ import { WeatherApp } from './components/WeatherApp';
 import { AppStoresApp } from './components/AppStoresApp';
 import { MohoSearchApp } from './components/MohoSearchApp';
 
+const SplashScreen: React.FC = () => {
+    const [phase, setPhase] = useState(0);
+
+    useEffect(() => {
+        // FIX: Explicitly use `window.setTimeout` and `window.clearTimeout` to avoid type conflicts
+        // between Node.js's `Timeout` object and the browser's `number` for timeout IDs.
+        const timers: number[] = [];
+        timers.push(window.setTimeout(() => setPhase(1), 100)); // Fade in fog
+        timers.push(window.setTimeout(() => setPhase(2), 1000)); // Fade in line 1
+        timers.push(window.setTimeout(() => setPhase(3), 2500)); // Fade in line 2
+        timers.push(window.setTimeout(() => setPhase(4), 5000)); // Start fade out
+
+        return () => timers.forEach(window.clearTimeout);
+    }, []);
+
+    const splashScreenStyle: React.CSSProperties = {
+        backgroundColor: phase >= 4 ? 'transparent' : 'black',
+    };
+    const fogContainerStyle: React.CSSProperties = {
+        opacity: phase >= 1 && phase < 4 ? 1 : 0,
+    };
+    const line1Style: React.CSSProperties = {
+        opacity: phase >= 2 ? 1 : 0,
+        transform: phase >= 2 ? 'translateY(0)' : 'translateY(20px)',
+    };
+     const line2Style: React.CSSProperties = {
+        opacity: phase >= 3 ? 1 : 0,
+        transform: phase >= 3 ? 'translateY(0)' : 'translateY(20px)',
+    };
+
+    return (
+        <div id="splash-screen" className="fixed inset-0 bg-black z-50 flex justify-center items-center transition-colors duration-1000 ease-in-out" style={splashScreenStyle}>
+            <div id="fog-container" className="absolute bottom-0 left-0 w-full h-1/3 transition-opacity duration-1000 ease-in-out" style={fogContainerStyle}>
+                <div className="absolute inset-0 filter blur-2xl">
+                    <div className="animate-fog-layer-1 absolute w-3/4 h-3/4 bg-cyan-400/20 rounded-full -bottom-1/4 left-0"></div>
+                    <div className="animate-fog-layer-2 absolute w-full h-full bg-blue-500/20 rounded-full -bottom-1/2 right-0"></div>
+                    <div className="animate-fog-layer-3 absolute w-1/2 h-1/2 bg-cyan-300/20 rounded-full -bottom-1/3 right-1/4"></div>
+                </div>
+            </div>
+
+            <div id="welcome-text-container" className="text-white text-center z-10 px-4">
+                <p id="line1" className="text-3xl md:text-5xl font-bold transition-all duration-1000" style={line1Style}>مرحباً، أنا موهو</p>
+                <p id="line2" className="text-xl md:text-3xl mt-4 transition-all duration-1000" style={line2Style}>كيف يمكنني مساعدتك اليوم؟</p>
+            </div>
+            <style>{`
+                @keyframes moveFog1 { 0% { transform: translate(-10%, 10%) scale(1); } 50% { transform: translate(10%, -10%) scale(1.1); } 100% { transform: translate(-10%, 10%) scale(1); } }
+                @keyframes moveFog2 { 0% { transform: translate(15%, -5%) scale(1.2); } 50% { transform: translate(-15%, 5%) scale(1); } 100% { transform: translate(15%, -5%) scale(1.2); } }
+                @keyframes moveFog3 { 0% { transform: translate(-5%, -15%) scale(1); } 50% { transform: translate(5%, 15%) scale(1.2); } 100% { transform: translate(-5%, -15%) scale(1); } }
+                .animate-fog-layer-1 { animation: moveFog1 25s ease-in-out infinite; }
+                .animate-fog-layer-2 { animation: moveFog2 30s ease-in-out infinite; }
+                .animate-fog-layer-3 { animation: moveFog3 20s ease-in-out infinite; }
+            `}</style>
+        </div>
+    );
+};
+
+
 const ModelSelectorDropdown: React.FC<{
     activeModel: ModelId;
     setActiveModel: (model: ModelId) => void;
@@ -259,6 +316,17 @@ const App: React.FC = () => {
     const [isDesignMode, setIsDesignMode] = useState(false);
     const [designContent, setDesignContent] = useState('');
     const [promptForNextModel, setPromptForNextModel] = useState<string | null>(null);
+    const [showSplash, setShowSplash] = useState(!sessionStorage.getItem('splashShown'));
+
+    useEffect(() => {
+        if (showSplash) {
+            const timer = setTimeout(() => {
+                setShowSplash(false);
+                sessionStorage.setItem('splashShown', 'true');
+            }, 6500); // 5s for animation + 1.5s fade out
+            return () => clearTimeout(timer);
+        }
+    }, [showSplash]);
 
     useEffect(() => {
         document.documentElement.lang = 'ar';
@@ -270,7 +338,7 @@ const App: React.FC = () => {
         startOnLoad: false,
         theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
         securityLevel: 'loose',
-        fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+        fontFamily: "'Tajawal', sans-serif",
       });
     }, []);
 
@@ -356,8 +424,9 @@ const App: React.FC = () => {
 
     return (
         <div className="h-screen w-screen font-sans bg-[var(--token-main-surface-primary)] flex flex-col relative overflow-hidden">
+            {showSplash && <SplashScreen />}
             <AdhanNotifier />
-            <main className="flex-1 flex flex-col w-full overflow-hidden">
+            <main className={`flex-1 flex flex-col w-full overflow-hidden transition-opacity duration-500 ${showSplash ? 'opacity-0' : 'opacity-100'}`}>
                {renderContent()}
             </main>
         </div>

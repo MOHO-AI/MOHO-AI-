@@ -312,7 +312,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ scrollToLocation, onSc
                        {pages[currentPage - 1]?.map((ayah: any) => (
                             <span id={`ayah-${selectedSurah.number}-${ayah.number}`} key={ayah.number} className="p-1">
                                 {ayah.text}
-                                <span className="text-sm font-sans text-yellow-600 dark:text-yellow-400 mx-1">{`﴿${ayah.number.toLocaleString('ar-EG')}﴾`}</span>
+                                <span className="text-sm font-sans text-yellow-600 dark:text-yellow-400 mx-1">{`﴿${ayah.number.toLocaleString('ar-EG')}﴾ ۝ `}</span>
                             </span>
                         ))}
                     </div>
@@ -322,7 +322,7 @@ export const QuranReader: React.FC<QuranReaderProps> = ({ scrollToLocation, onSc
                         {selectedSurah.ayahs.map((ayah: any) => (
                             <span id={`ayah-${selectedSurah.number}-${ayah.number}`} key={ayah.number} className="p-1">
                                 {ayah.text}
-                                <span className="text-sm font-sans text-yellow-600 dark:text-yellow-400 mx-1">{`﴿${ayah.number.toLocaleString('ar-EG')}﴾`}</span>
+                                <span className="text-sm font-sans text-yellow-600 dark:text-yellow-400 mx-1">{`﴿${ayah.number.toLocaleString('ar-EG')}﴾ ۝ `}</span>
                             </span>
                         ))}
                     </div>

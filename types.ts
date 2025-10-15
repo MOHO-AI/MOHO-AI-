@@ -62,10 +62,8 @@ export interface Message {
   researchPlan?: string[] | null;
   isPlanExecuted?: boolean;
   sources?: Source[];
-  chartData?: ChartData | null;
   designContent?: string | null;
-  mermaidCodes?: string[] | null;
-  qrCodeSVG?: string | null;
+  componentPlaceholders?: { [key: string]: { type: 'chart' | 'mermaid' | 'qr'; data: any; } };
   callStatus?: 'calling' | 'completed' | null;
   whiteboardSteps?: WhiteboardStep[];
   statusWidget?: { type: 'weather' | 'prayer' } | null;

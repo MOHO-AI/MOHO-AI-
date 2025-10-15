@@ -62,17 +62,11 @@ export const PaperclipIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =>
     </svg>
 );
 
-export const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M9.5 8.5c.9-2.1 2.4-3.8 4.2-4.9" />
-        <path d="M14.5 8.5c-.9-2.1-2.4-3.8-4.2-4.9" />
-        <path d="M9.5 15.5c.9 2.1 2.4 3.8 4.2 4.9" />
-        <path d="M14.5 15.5c-.9 2.1-2.4-3.8-4.2-4.9" />
-        <path d="M17 11c1.2-1.2 2-2.9 2-4.9" />
-        <path d="M7 11c-1.2-1.2-2-2.9-2-4.9" />
-        <path d="M17 13c1.2 1.2 2 2.9 2 4.9" />
-        <path d="M7 13c-1.2 1.2-2 2.9-2 4.9" />
-        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+export const ThinkingIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props} strokeDasharray="3 3">
+        <circle cx="12" cy="12" r="1"></circle>
+        <ellipse cx="12" cy="12" rx="10" ry="5"></ellipse>
+        <ellipse cx="12" cy="12" rx="5" ry="10"></ellipse>
     </svg>
 );
 
@@ -172,6 +166,15 @@ export const AtomIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
         <circle cx="12" cy="12" r="1" />
         <path d="M20.2 20.2c2.04-2.03.02-5.91-4.04-9.96-4.06-4.06-7.94-6.08-9.96-4.04-2.03 2.03-.02 5.91 4.04 9.96 4.06 4.06 7.94 6.08 9.96 4.04Z" />
         <path d="M3.8 3.8c-2.04 2.03-.02 5.91 4.04 9.96 4.06 4.06 7.94 6.08 9.96 4.04 2.03-2.03.02-5.91-4.04-9.96C9.7 3.78 5.82 1.76 3.8 3.8Z" />
+    </svg>
+);
+// FIX: Add missing BrainIcon component
+export const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v0A2.5 2.5 0 0 1 9.5 7h-3A2.5 2.5 0 0 1 4 4.5v0A2.5 2.5 0 0 1 6.5 2"/>
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v0A2.5 2.5 0 0 0 14.5 7h3A2.5 2.5 0 0 0 20 4.5v0A2.5 2.5 0 0 0 17.5 2"/>
+      <path d="M12 7.5c-2 0-2.5-1-4.5-1-2 0-2.5.5-4 2-1.5 1.5-1.5 3.5-1.5 5.5C2 17 3 19 4.5 20c.5.5 1.5 1 2.5 1s2-.5 2.5-1c.5-.5.5-1.5.5-2.5V17"/>
+      <path d="M12 7.5c2 0 2.5-1 4.5-1 2 0 2.5.5 4 2 1.5 1.5 1.5 3.5 1.5 5.5c0 3.5-1 5.5-2.5 6.5-.5.5-1.5 1-2.5 1s-2-.5-2.5-1c-.5-.5-.5-1.5-.5-2.5V17"/>
     </svg>
 );
 export const MicrophoneIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
