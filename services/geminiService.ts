@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type, GenerateContentResponse, Part, GenerateImagesResponse } from "@google/genai";
+import { GoogleGenAI, Type, GenerateContentResponse, Part, GenerateImagesResponse, Modality } from "@google/genai";
 import mammoth from 'mammoth';
 import { MODELS } from '../constants';
 import { ModelId, ThinkingMode } from '../types';
@@ -139,8 +139,8 @@ export const generateContentStream = async (
     config: {
       systemInstruction: systemInstruction,
       tools: isWebSearchEnabled ? [{ googleSearch: {} }] : [],
-      // FIX: Apply thinking config only to gemini-2.5-flash model as per guidelines.
-      ...(model.geminiModel === 'gemini-2.5-flash' ? getThinkingConfig(ThinkingMode.BALANCED, modelId, isDeepThinkingEnabled) : {})
+      // FIX: Apply thinking config to all gemini-2.5 series models as per guidelines.
+      ...(model.geminiModel.startsWith('gemini-2.5-') ? getThinkingConfig(ThinkingMode.BALANCED, modelId, isDeepThinkingEnabled) : {})
     }
   });
 
@@ -165,6 +165,28 @@ export const generateSimpleText = async (modelId: ModelId, prompt: string, syste
     const response = await callApi<GenerateContentResponse>(apiCallGenerator);
     return response.text;
 }
+
+export const generateSpeech = async (text: string, voiceName: string): Promise<string> => {
+    const apiCallGenerator = (ai_instance: GoogleGenAI) => ai_instance.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: text }] }],
+        config: {
+            responseModalities: [Modality.AUDIO],
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: { voiceName: voiceName },
+                },
+            },
+        },
+    });
+
+    const response = await callApi<GenerateContentResponse>(apiCallGenerator);
+    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!base64Audio) {
+        throw new Error("Audio generation failed, no audio data received.");
+    }
+    return base64Audio;
+};
 
 export const generateStructuredContent = async (modelId: ModelId, prompt: string, systemInstructionOverride: string, responseSchema: any) => {
     const model = MODELS[modelId];

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModelId } from './types';
-import { ThunderIcon, QualityIcon, GlobeIcon, BookOpenIcon, UsersIcon } from './components/Icons';
+import { ThunderIcon, QualityIcon, GlobeIcon, BookOpenIcon, UsersIcon, AudioWaveformIcon } from './components/Icons';
 
 export const BASE_SYSTEM_INSTRUCTION = `
 أنت مساعد ذكاء اصطناعي متطور اسمك موهو.
@@ -31,6 +31,8 @@ export const BASE_SYSTEM_INSTRUCTION = `
   - للحصول على حالة الطقس الحالية، قم بتضمين هذا الأمر في ردك: \`[FETCH_WEATHER]\`
   - لمعرفة وقت الصلاة القادمة، قم بتضمين هذا الأمر: \`[FETCH_PRAYER_TIME]\`
   سيقوم النظام بعرض واجهة تفاعلية بناءً على هذا الأمر.
+- **تضمين فيديوهات يوتيوب:** إذا طلب المستخدم فيديو يوتيوب أو كان الفيديو مناسبًا للشرح، قم بتضمين رابط الفيديو داخل وسم <youtube>. سيتم عرض الفيديو مباشرة في الدردشة. يمكنك تضمين ما يصل إلى 7 فيديوهات.
+  مثال: \`<youtube>https://www.youtube.com/watch?v=dQw4w9WgXcQ</youtube>\`
 `;
 
 export const MODELS = {
@@ -57,7 +59,7 @@ export const MODELS = {
     id: ModelId.QUALITY,
     name: 'موهو المعقد',
     // FIX: Updated deprecated model 'gemini-2.5-pro' to 'gemini-2.5-flash'.
-    geminiModel: 'gemini-2.5-pro',
+    geminiModel: 'gemini-2.5-flash',
     Icon: QualityIcon,
     systemInstruction: BASE_SYSTEM_INSTRUCTION + `
     أنت متخصص في المهام المعقدة والتحليل العميق. قدراتك تشمل البرمجة، التفكير العميق، البحث في الويب، وإنشاء المخططات البيانية، وتصميم واجهات الويب، وإنشاء الخرائط الذهنية، وإنشاء وفك رموز QR.
@@ -99,7 +101,7 @@ export const MODELS = {
     id: ModelId.RESEARCHER,
     name: 'موهو الباحث',
     // FIX: Updated deprecated model 'gemini-2.5-pro' to 'gemini-2.5-flash'.
-    geminiModel: 'gemini-2.5-pro',
+    geminiModel: 'gemini-2.5-flash',
     Icon: GlobeIcon,
     systemInstruction: BASE_SYSTEM_INSTRUCTION + `
     أنت "موهو الباحث"، مساعد بحثي خبير مدعوم بالذكاء الاصطناعي. مهمتك هي إجراء بحث شامل وتقديم تقارير مفصلة ومنظمة.
@@ -135,6 +137,17 @@ export const MODELS = {
     أنت في وضع "موهو الاجتماعي". مهمتك هي تسهيل وإدارة جلسة حوارية بين المستخدم ومجموعة من مساعدي الذكاء الاصطناعي.
     ستبدأ بطلب تفاصيل الاجتماع من المستخدم: الموضوع، عدد الأعضاء، أسماؤهم، وشخصياتهم.
     بمجرد بدء الاجتماع، ستقوم بإدارة الحوار، وتحديد من يتحدث بعد ذلك، وضمان أن يكون النقاش تفاعليًا وحيويًا.`,
+    features: { webSearch: false, researchPlanner: false, fileUpload: false, deepThinking: false, chartGeneration: false, designTool: false }
+  },
+  [ModelId.VOICE]: {
+    id: ModelId.VOICE,
+    name: 'موهو الصوتي',
+    geminiModel: 'gemini-2.5-flash-native-audio-preview-09-2025',
+    Icon: AudioWaveformIcon,
+    systemInstruction: BASE_SYSTEM_INSTRUCTION + `
+    أنت في وضع "موهو الصوتي". مهمتك هي إجراء محادثة صوتية طبيعية وسلسة مع المستخدم.
+    كن موجزًا ومباشرًا في ردودك، لأنها ستُقال بصوت عالٍ.
+    استخدم لغة طبيعية ومحادثية.`,
     features: { webSearch: false, researchPlanner: false, fileUpload: false, deepThinking: false, chartGeneration: false, designTool: false }
   },
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateContentStream, getResearchPlan, executeResearch, processFilesForApi, generateImage } from '../services/geminiService';
 import type { GenerateContentResponse } from '@google/genai';
 import { MODELS } from '../constants';
-import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking, WhiteboardStep } from '../types';
+import { ModelId, type Message, type QuranScrollLocation, ChartData, DeepThinking, WhiteboardStep, Attachment } from '../types';
 import { MessageRenderer } from './MessageRenderer';
 import { PaperclipIcon, SendIcon, SparkleIcon, FileTextIcon, XIcon, ImagePlaceholderIcon, ThinkingIcon, GlobeIcon, ChartBarIcon, PaletteIcon, LayoutIcon, MicrophoneIcon, StopCircleIcon, DownloadIcon, MusicIcon, TrashIcon, GoogleIcon } from './Icons';
 import QRCode from 'qrcode';
@@ -42,7 +42,6 @@ const ForwardModal: React.FC<{
                 </div>
                 <div className="p-2">
                     {Object.values(MODELS)
-                        // FIX: Filter out the SOCIAL model as it has a different flow and cannot be forwarded to.
                         .filter(model => model.id !== currentModelId && model.id !== ModelId.SOCIAL)
                         .map(model => (
                             <button
@@ -101,7 +100,6 @@ const LoadingIndicator: React.FC = () => (
     </div>
 );
 
-// This function centralizes all parsing of special content from the model's response.
 const parseMessageContent = async (rawContent: string): Promise<Partial<Message>> => {
     let content = rawContent;
     const componentPlaceholders: NonNullable<Message['componentPlaceholders']> = {};
@@ -110,7 +108,6 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
     let whiteboardSteps: WhiteboardStep[] | null = null;
     let statusWidget: Message['statusWidget'] = null;
 
-    // Helper to process and replace all occurrences of a pattern with a placeholder
     const processComponentBlocks = async (
         regex: RegExp,
         type: 'qr' | 'chart' | 'mermaid',
@@ -128,23 +125,20 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
                 const data = await parser(blockContent);
                 const id = `component-${Date.now()}-${Math.random()}`;
                 componentPlaceholders[id] = { type, data };
-                // FIX: Replace with a div placeholder surrounded by newlines to ensure it's treated as a block element
                 const placeholder = `\n\n<div data-component-id="${id}"></div>\n\n`;
                 tempContent = tempContent.replace(match[0], placeholder);
             } catch (e) {
                 console.warn(`Could not parse component block type ${type}, might be streaming.`, e);
                 allSucceeded = false;
-                break; // Stop processing this type if one block fails (likely due to streaming)
+                break; 
             }
         }
         
-        // Only update content if all blocks of this type were successfully parsed
         if (allSucceeded) {
             content = tempContent;
         }
     };
 
-    // Define parsers for each component type
     const qrParser = async (blockContent: string) => {
         const payload = JSON.parse(blockContent);
         if (!payload.content) throw new Error("QR payload has no content");
@@ -156,12 +150,10 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
     const chartParser = async (blockContent: string) => JSON.parse(blockContent);
     const mermaidParser = async (blockContent: string) => blockContent;
 
-    // Process all component types
     await processComponentBlocks(/\[QR_CODE_GENERATE:({.*?})\]/g, 'qr', qrParser);
     await processComponentBlocks(/```json:chart\n([\s\S]*?)\n```/g, 'chart', chartParser);
     await processComponentBlocks(/```mermaid\n([\s\S]*?)\n```/g, 'mermaid', mermaidParser);
     
-    // Helper to extract a block and remove it from content (for non-inline components)
     const extractBlock = (regex: RegExp): string | null => {
         const match = content.match(regex);
         if (match && match[1]) {
@@ -171,7 +163,6 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         return null;
     };
     
-    // Deep Thinking (not inline)
     const dtBlock = extractBlock(/\*\*\[DEEP_THINKING_START\]\*\*\n([\s\S]*?)\n\*\*\[DEEP_THINKING_END\]\*\*/);
     if (dtBlock) {
         const methodMatch = dtBlock.match(/\*\*المنهجية:\*\*\s*(.*)/);
@@ -183,7 +174,6 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         }
     }
     
-    // Whiteboard (not inline)
     const whiteboardRegex = /\[WHITEBOARD_START\]\s*([\s\S]*?)\s*\[WHITEBOARD_END\]/g;
     const whiteboardMatches = [...content.matchAll(whiteboardRegex)];
     if (whiteboardMatches.length > 0) {
@@ -208,10 +198,8 @@ const parseMessageContent = async (rawContent: string): Promise<Partial<Message>
         }
     }
 
-    // Design (not inline)
     designContent = extractBlock(/```html:design\n([\s\S]*?)\n```/);
     
-    // Status Widgets (not inline)
     content = content.replace(/\[FETCH_WEATHER\]\s*/g, () => {
         statusWidget = { type: 'weather' };
         return '';
@@ -250,7 +238,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   
   const currentModel = MODELS[modelId];
 
-  // Feature Toggles
   const [isDeepThinkingEnabled, setIsDeepThinkingEnabled] = useState(false);
   const [isWebSearchEnabled, setIsWebSearchEnabled] = useState(currentModel?.features.webSearch || false);
   const [isChartGenerationEnabled, setIsChartGenerationEnabled] = useState(false);
@@ -277,7 +264,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   }, [initialPrompt, clearInitialPrompt]);
 
   useEffect(() => {
-    // Reset feature toggles when model changes
     setIsDeepThinkingEnabled(false);
     setIsWebSearchEnabled(currentModel?.features.webSearch || false);
     setIsChartGenerationEnabled(false);
@@ -286,7 +272,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   }, [modelId, currentModel, isDesignModeEnabled, toggleDesignMode]);
   
-  // Speech Recognition Setup
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -364,6 +349,178 @@ export const ChatView: React.FC<ChatViewProps> = ({
     stopGenerationRef.current = true;
   };
 
+  const handleSendMessage = useCallback(async (
+    messageContent: string,
+    messageAttachments: File[],
+    isHiddenFromHistory?: boolean
+  ) => {
+    if (isLoading || (!messageContent.trim() && messageAttachments.length === 0)) return;
+    
+    const startTime = Date.now();
+    stopGenerationRef.current = false;
+    
+    if (!isHiddenFromHistory) {
+      setInput('');
+      setAttachments([]);
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: messageContent,
+      attachments: messageAttachments.map(f => ({ name: f.name, mimeType: f.type, size: f.size }))
+    };
+
+    if (!isHiddenFromHistory) {
+      setMessages(prev => [...prev, userMessage]);
+    }
+
+    const isResearchMode = modelId === ModelId.RESEARCHER && !isHiddenFromHistory;
+
+    if (isResearchMode) {
+        setIsLoading(true);
+        setIsPerformingWebSearch(true);
+        try {
+            const plan = await getResearchPlan(messageContent);
+            if (plan && plan.length > 0) {
+                const planMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: '',
+                    researchPlan: plan,
+                    isPlanExecuted: false,
+                };
+                setMessages(prev => [...prev, planMessage]);
+            } else {
+                throw new Error("Failed to generate a research plan.");
+            }
+        } catch (e) {
+            console.error(e);
+            const errorMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: "عذراً، لم أتمكن من إنشاء خطة بحث. هل يمكنك إعادة صياغة طلبك أو تبسيطه؟"
+            };
+            setMessages(prev => [...prev, errorMessage]);
+        } finally {
+            setIsLoading(false);
+            setIsPerformingWebSearch(false);
+        }
+        return;
+    }
+
+
+    setIsLoading(true);
+    
+    const assistantMessageId = (Date.now() + 1).toString();
+    let assistantMessage: Message = { 
+        id: assistantMessageId, 
+        role: 'assistant', 
+        content: '',
+        referencedAttachments: userMessage.attachments
+    };
+    setMessages(prev => [...prev, assistantMessage]);
+    
+    const history = (isHiddenFromHistory ? messagesRef.current : [...messagesRef.current, userMessage])
+        .filter(m => m.id !== userMessage.id && !(m.researchPlan && !m.isPlanExecuted))
+        .map(m => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content }]
+        }));
+    
+    try {
+      const fileParts = await processFilesForApi(messageAttachments);
+      const textPart = { text: messageContent };
+      const userContentForApi = { 
+        role: 'user', 
+        parts: [textPart, ...fileParts].filter(p => (('text' in p && p.text.trim()) || 'inlineData' in p))
+      };
+      
+      let finalContent = '';
+      let sources: Message['sources'] = [];
+      
+      const stream: AsyncGenerator<GenerateContentResponse> = await generateContentStream(modelId, userContentForApi, history, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride);
+
+      for await (const chunk of stream) {
+        if (isPerformingWebSearch) setIsPerformingWebSearch(false);
+        if (stopGenerationRef.current) break;
+        
+        finalContent += chunk.text;
+        sources = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((s: any) => s.web).filter(Boolean) || sources;
+        
+        const scrollPlayRegex = /\[(SCROLL_TO|PLAY_AYAH):({.*?})\]\s*/g;
+        let match;
+        const tempContentForExec = finalContent;
+        while((match = scrollPlayRegex.exec(tempContentForExec)) !== null) {
+            try {
+                const command = match[1];
+                const payload = JSON.parse(match[2]);
+                if (command === 'SCROLL_TO' && setScrollToLocation) setScrollToLocation(payload);
+                if (command === 'PLAY_AYAH' && setPlayLocation) setPlayLocation(payload);
+            } catch(e) { console.error("Failed to parse command:", e); }
+        }
+        
+        const contentToParse = finalContent.replace(scrollPlayRegex, '');
+        
+        const parsedData = await parseMessageContent(contentToParse);
+        
+        if (parsedData.designContent && setDesignContent) setDesignContent(parsedData.designContent);
+
+        if (parsedData.whiteboardSteps && !processedWhiteboardRef.current.has(assistantMessageId)) {
+            processedWhiteboardRef.current.add(assistantMessageId);
+            (async () => {
+                const finalSteps = await Promise.all(
+                    parsedData.whiteboardSteps!.map(async (step): Promise<WhiteboardStep> => {
+                        if (step.type === 'generate_image') {
+                            try {
+                                const imageUrl = await generateImage(step.content);
+                                return { type: 'image', content: imageUrl };
+                            } catch (e) {
+                                console.error('Image generation failed for prompt:', step.content, e);
+                                return { type: 'text', content: `**[فشل إنشاء الصورة]**\n_الموجه: "${step.content}"_` };
+                            }
+                        }
+                        return step;
+                    })
+                );
+                setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, whiteboardSteps: finalSteps } : m));
+            })();
+        }
+
+        setMessages(prev => prev.map(m => {
+            if (m.id === assistantMessageId) {
+                const updatedMessage = { ...m, ...parsedData, sources };
+                if (parsedData.whiteboardSteps) {
+                    // FIX: Explicitly type the 'step' parameter to resolve the 'unknown' type error.
+                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map((step: any) => 
+                        step.type === 'generate_image' 
+                            ? { type: 'image_loading', content: step.content } 
+                            : step
+                    );
+                }
+                return updatedMessage;
+            }
+            return m;
+        }));
+      }
+
+    } catch (error) {
+      console.error(error);
+      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ ما. يرجى المحاولة مرة أخرى.' } : m));
+    } finally {
+      setIsLoading(false);
+      setIsPerformingWebSearch(false);
+      stopGenerationRef.current = false;
+      const duration = Date.now() - startTime;
+      setMessages(prev => prev.map(m => {
+        if (m.id === assistantMessageId && m.deepThinking) {
+            return { ...m, deepThinking: { ...m.deepThinking, duration }};
+        }
+        return m;
+      }));
+    }
+  }, [isLoading, modelId, setScrollToLocation, setPlayLocation, isDeepThinkingEnabled, isWebSearchEnabled, setDesignContent, systemInstructionOverride, isPerformingWebSearch]);
+  
   const handleExecuteResearch = useCallback(async (messageId: string, plan: string[]) => {
       const currentMessages = messagesRef.current;
       setMessages(prev => prev.map(m => m.id === messageId ? { ...m, isPlanExecuted: true, researchPlan: plan } : m));
@@ -416,216 +573,70 @@ export const ChatView: React.FC<ChatViewProps> = ({
           stopGenerationRef.current = false;
       }
   }, [setDesignContent, isPerformingWebSearch]);
-
-  const handleSendMessage = useCallback(async (messageContent: string, isHiddenFromHistory?: boolean) => {
-    if (isLoading || (!messageContent.trim() && attachments.length === 0)) return;
-    
-    const startTime = Date.now();
-    stopGenerationRef.current = false;
-    
-    const combinedAttachments = [...attachments];
-    
-    const currentInput = input;
-    setInput('');
-    setAttachments([]);
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: messageContent,
-      attachments: combinedAttachments.map(f => ({ name: f.name, mimeType: f.type, size: f.size }))
-    };
-
-    if (!isHiddenFromHistory) {
-      setMessages(prev => [...prev, userMessage]);
-    }
-
-    const isResearchMode = modelId === ModelId.RESEARCHER && !isHiddenFromHistory;
-
-    if (isResearchMode) {
-        setIsLoading(true);
-        setIsPerformingWebSearch(true);
-        try {
-            const plan = await getResearchPlan(messageContent);
-            if (plan && plan.length > 0) {
-                const planMessage: Message = {
-                    id: (Date.now() + 1).toString(),
-                    role: 'assistant',
-                    content: '', // The component itself provides the introductory text
-                    researchPlan: plan,
-                    isPlanExecuted: false,
-                };
-                setMessages(prev => [...prev, planMessage]);
-            } else {
-                throw new Error("Failed to generate a research plan.");
-            }
-        } catch (e) {
-            console.error(e);
-            const errorMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: "عذراً، لم أتمكن من إنشاء خطة بحث. هل يمكنك إعادة صياغة طلبك أو تبسيطه؟"
-            };
-            setMessages(prev => [...prev, errorMessage]);
-        } finally {
-            setIsLoading(false);
-            setIsPerformingWebSearch(false);
-        }
-        return;
-    }
-
-
-    setIsLoading(true);
-    
-    const assistantMessageId = (Date.now() + 1).toString();
-    let assistantMessage: Message = { id: assistantMessageId, role: 'assistant', content: '' };
-    setMessages(prev => [...prev, assistantMessage]);
-    
-    const history = messages
-        .filter(m => !(m.researchPlan && !m.isPlanExecuted))
-        .map(m => ({
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
-        }));
-    
-    try {
-      const fileParts = await processFilesForApi(combinedAttachments);
-      const textPart = { text: messageContent };
-      const userContentForApi = { 
-        role: 'user', 
-        parts: [textPart, ...fileParts].filter(p => (('text' in p && p.text.trim()) || 'inlineData' in p))
-      };
-      
-      let finalContent = '';
-      let sources: Message['sources'] = [];
-      
-      const stream: AsyncGenerator<GenerateContentResponse> = await generateContentStream(modelId, userContentForApi, history, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride);
-
-      for await (const chunk of stream) {
-        if (isPerformingWebSearch) setIsPerformingWebSearch(false);
-        if (stopGenerationRef.current) break;
-        
-        finalContent += chunk.text;
-        sources = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((s: any) => s.web).filter(Boolean) || sources;
-        
-        // Handle non-display commands separately
-        const scrollPlayRegex = /\[(SCROLL_TO|PLAY_AYAH):({.*?})\]\s*/g;
-        let match;
-        const tempContentForExec = finalContent;
-        while((match = scrollPlayRegex.exec(tempContentForExec)) !== null) {
-            try {
-                const command = match[1];
-                const payload = JSON.parse(match[2]);
-                if (command === 'SCROLL_TO' && setScrollToLocation) setScrollToLocation(payload);
-                if (command === 'PLAY_AYAH' && setPlayLocation) setPlayLocation(payload);
-            } catch(e) { console.error("Failed to parse command:", e); }
-        }
-        
-        const contentToParse = finalContent.replace(scrollPlayRegex, '');
-        
-        const parsedData = await parseMessageContent(contentToParse);
-        
-        if (parsedData.designContent && setDesignContent) setDesignContent(parsedData.designContent);
-
-        if (parsedData.whiteboardSteps && !processedWhiteboardRef.current.has(assistantMessageId)) {
-            processedWhiteboardRef.current.add(assistantMessageId);
-            (async () => {
-                const finalSteps = await Promise.all(
-                    // FIX: Add explicit return type to the map callback to ensure correct type inference for finalSteps.
-                    parsedData.whiteboardSteps!.map(async (step): Promise<WhiteboardStep> => {
-                        if (step.type === 'generate_image') {
-                            try {
-                                const imageUrl = await generateImage(step.content);
-                                return { type: 'image', content: imageUrl };
-                            } catch (e) {
-                                console.error('Image generation failed for prompt:', step.content, e);
-                                return { type: 'text', content: `**[فشل إنشاء الصورة]**\n_الموجه: "${step.content}"_` };
-                            }
-                        }
-                        return step;
-                    })
-                );
-                setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, whiteboardSteps: finalSteps } : m));
-            })();
-        }
-
-        setMessages(prev => prev.map(m => {
-            if (m.id === assistantMessageId) {
-                const updatedMessage = { ...m, ...parsedData, sources };
-                if (parsedData.whiteboardSteps) {
-                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map(step => 
-                        step.type === 'generate_image' 
-                            ? { type: 'image_loading', content: step.content } 
-                            : step
-                    );
-                }
-                return updatedMessage;
-            }
-            return m;
-        }));
-      }
-
-    } catch (error) {
-      console.error(error);
-      setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ ما. يرجى المحاولة مرة أخرى.' } : m));
-    } finally {
-      setIsLoading(false);
-      setIsPerformingWebSearch(false);
-      stopGenerationRef.current = false;
-      const duration = Date.now() - startTime;
-      setMessages(prev => prev.map(m => {
-        if (m.id === assistantMessageId && m.deepThinking) {
-            return { ...m, deepThinking: { ...m.deepThinking, duration }};
-        }
-        return m;
-      }));
-    }
-  }, [isLoading, modelId, messages, setScrollToLocation, setPlayLocation, attachments, isDeepThinkingEnabled, isWebSearchEnabled, setDesignContent, systemInstructionOverride, input, isPerformingWebSearch]);
   
+  const handleRegenerate = useCallback((messageId: string) => {
+    const assistantMessageIndex = messagesRef.current.findIndex(m => m.id === messageId);
+    if (assistantMessageIndex <= 0) return;
+
+    const userMessageIndex = assistantMessageIndex - 1;
+    const userMessage = messagesRef.current[userMessageIndex];
+
+    if (userMessage?.role !== 'user') return;
+
+    setMessages(prev => prev.slice(0, assistantMessageIndex));
+
+    const fileAttachments: File[] = []; // Cannot get original File objects, so we resend without them.
+    handleSendMessage(userMessage.content, fileAttachments, true);
+
+  }, [handleSendMessage]);
+
   const handleEditMessage = useCallback((messageId: string, newContent: string) => {
-    const messageIndex = messages.findIndex(m => m.id === messageId);
+    const messageIndex = messagesRef.current.findIndex(m => m.id === messageId);
     if (messageIndex === -1) return;
 
-    const originalMessage = messages[messageIndex];
+    const originalMessage = messagesRef.current[messageIndex];
     if (originalMessage.content.trim() === newContent.trim()) {
         setEditingMessageId(null);
         return;
     }
     
-    setMessages(messages.slice(0, messageIndex));
+    setMessages(messagesRef.current.slice(0, messageIndex));
     setEditingMessageId(null);
     setPendingPrompt(newContent);
-  }, [messages]);
+  }, []);
 
   useEffect(() => {
     if (pendingPrompt) {
-      handleSendMessage(pendingPrompt);
+      handleSendMessage(pendingPrompt, [], false);
       setPendingPrompt(null);
     }
   }, [pendingPrompt, handleSendMessage]);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      if (editingMessageId) return;
-      handleSendMessage(input);
-    }
-  };
-
+  
   const handleForwardSelect = (targetModelId: ModelId) => {
     if (forwardingContent && onModelChangeAndSetPrompt) {
         onModelChangeAndSetPrompt(targetModelId, forwardingContent);
     }
     setForwardingContent(null);
   };
+  
+  const handlePaste = useCallback((event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = Array.from(event.clipboardData.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    if (imageFiles.length > 0) {
+        event.preventDefault();
+        if (attachments.length + imageFiles.length > 10) {
+            alert('يمكنك إرفاق 10 ملفات كحد أقصى لكل رسالة.');
+            return;
+        }
+        setAttachments(prev => [...prev, ...imageFiles]);
+    }
+  }, [attachments]);
 
   const handleExportChat = () => {
     if (messages.length === 0) return;
-
     const modelName = currentModel.name;
     const date = new Date().toISOString().split('T')[0];
     let markdownContent = `# محادثة موهو AI\n\n**النموذج:** ${modelName}\n**التاريخ:** ${date}\n\n---\n\n`;
-
     messages.forEach(message => {
         markdownContent += message.role === 'user' ? `**أنت:**\n` : `**مساعد موهو:**\n`;
         if (message.attachments && message.attachments.length > 0) {
@@ -633,7 +644,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
         }
         markdownContent += message.content.trim() + '\n\n---\n\n';
     });
-
     const blob = new Blob([markdownContent], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -703,8 +713,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         setEditingMessageId={setEditingMessageId}
                         onEditMessage={handleEditMessage}
                         onExecuteResearch={modelId === ModelId.RESEARCHER ? handleExecuteResearch : undefined}
-                        // FIX: Disable forwarding when the onModelChangeAndSetPrompt callback is not provided.
                         onForward={onModelChangeAndSetPrompt ? setForwardingContent : undefined}
+                        onRegenerate={msg.role === 'assistant' && index > 0 && messages[index-1]?.role === 'user' ? handleRegenerate : undefined}
                         isStreaming={isLoading && !isPerformingWebSearch && msg.role === 'assistant' && index === messages.length - 1}
                     />
                 ))
@@ -720,7 +730,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
         <div className="absolute bottom-0 left-0 right-0 w-full px-4 pb-4 bg-gradient-to-t from-[var(--token-main-surface-primary)] via-[var(--token-main-surface-primary)] to-transparent">
             <div className="max-w-3xl mx-auto">
-                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(input); }} className="relative">
+                <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(input, attachments); }} className="relative">
                      <div className="flex flex-col w-full rounded-3xl bg-[var(--token-main-surface-secondary)] border border-[var(--token-border-default)] transition-all" style={{boxShadow: 'var(--elevation-2)'}}>
                         {attachments.length > 0 && (
                             <div className="p-3 border-b border-[var(--token-border-default)]">
@@ -746,7 +756,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                                 ref={textareaRef}
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyDown}
+                                onPaste={handlePaste}
                                 placeholder={isListening ? "جارِ الاستماع..." : "اسأل عن أي شيء..."}
                                 className={`w-full bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-[var(--token-text-primary)] placeholder:text-[var(--token-text-tertiary)] text-base max-h-48 self-center px-2 ${inputFontClass || ''}`}
                                 rows={1}

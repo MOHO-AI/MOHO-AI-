@@ -5,6 +5,7 @@ export enum ModelId {
   QUALITY = 'QUALITY',
   RESEARCHER = 'RESEARCHER',
   SOCIAL = 'SOCIAL',
+  VOICE = 'VOICE',
 }
 
 export enum ThinkingMode {
@@ -62,6 +63,7 @@ export interface Message {
   researchPlan?: string[] | null;
   isPlanExecuted?: boolean;
   sources?: Source[];
+  referencedAttachments?: Attachment[];
   designContent?: string | null;
   componentPlaceholders?: { [key: string]: { type: 'chart' | 'mermaid' | 'qr'; data: any; } };
   callStatus?: 'calling' | 'completed' | null;
@@ -83,15 +85,6 @@ export interface DeepThinking {
 export interface Source {
   uri: string;
   title?: string;
-}
-
-// Fix: Define and export the HadithBook interface.
-export interface HadithBook {
-  name: string;
-  hadiths: {
-    hadithnumber: number | string;
-    text: string;
-  }[];
 }
 
 export interface QuranScrollLocation {

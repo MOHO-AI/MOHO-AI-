@@ -40,33 +40,6 @@ export const fetchHijriCalendar = async (year: number, month: number, latitude?:
     return json.data;
 };
 
-// Fix: Implement and export function to fetch Hadith books for a collection.
-export const fetchHadithBooksForCollection = async (collectionName: string) => {
-    const response = await fetch(`${SUNNAH_API_BASE}/collections/${collectionName}/books`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const json = await response.json();
-    // Map the API response to the format expected by the HadithReader component.
-    return json.books.map((book: any) => ({
-        book_number: book.bookNumber,
-        name: book.book.find((b: any) => b.lang === 'ar')?.name || 'Book Name Not Found'
-    }));
-};
-
-// Fix: Implement and export function to fetch Hadiths for a specific book.
-export const fetchHadithBook = async (collectionName: string, bookNumber: string) => {
-    const response = await fetch(`${SUNNAH_API_BASE}/collections/${collectionName}/books/${bookNumber}/hadiths?limit=0`);
-    if (!response.ok) throw new Error('Network response was not ok');
-    const json = await response.json();
-    // Map the API response to match component property expectations (e.g., hadithNumber -> hadithnumber).
-    return {
-        ...json,
-        hadiths: json.hadiths.map((h: any) => ({
-            hadithnumber: h.hadithNumber,
-            text: h.text
-        }))
-    };
-};
-
 // --- Weather API Logic (Moved from WeatherApp.tsx) ---
 
 const WMO_CODES: { [key: number]: { day: string; night: string; icon: string } } = {

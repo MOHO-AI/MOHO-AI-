@@ -6,6 +6,7 @@ import { ChatView } from './components/ChatView';
 import { DesignPreview } from './components/DesignPreview';
 import { SettingsPage } from './components/SettingsPage';
 import { SocialChatView } from './components/SocialChatView';
+import { VoiceChatView } from './components/VoiceChatView';
 import { SettingsIcon, AlgerianTeacherIcon, NoorAlIslamIcon, WeatherAppIcon, PlusIcon, AppStoreIcon, MohoSearchIcon } from './components/Icons';
 import { AlgerianTeacherApp } from './components/AlgerianTeacherApp';
 import { NoorAlIslamApp } from './components/noor-al-islam/NoorAlIslamApp';
@@ -106,6 +107,7 @@ const ModelSelectorDropdown: React.FC<{
             [ModelId.QUALITY]: 'للاستدلال والمهام الصعبة',
             [ModelId.RESEARCHER]: 'للبحث المتخصص وجمع المعلومات',
             [ModelId.SOCIAL]: 'للتفاعل وإنشاء المحتوى',
+            [ModelId.VOICE]: 'محادثة صوتية فورية',
         }[model.id] || ''
     }));
 
@@ -212,6 +214,7 @@ const ChatContainer: React.FC<{
     handleModelChangeAndSetPrompt: (modelId: ModelId, prompt: string) => void;
     promptForNextModel: string | null;
     clearInitialPrompt: () => void;
+    onExitVoiceMode: () => void;
 }> = ({
     activeModel,
     isDesignMode,
@@ -220,7 +223,8 @@ const ChatContainer: React.FC<{
     setDesignContent,
     handleModelChangeAndSetPrompt,
     promptForNextModel,
-    clearInitialPrompt
+    clearInitialPrompt,
+    onExitVoiceMode,
 }) => {
     const isComplexModelInDesignMode = activeModel === ModelId.QUALITY && isDesignMode;
 
@@ -228,6 +232,9 @@ const ChatContainer: React.FC<{
 
     if (activeModel === ModelId.SOCIAL) {
         return <SocialChatView key="social-view" />;
+    }
+    if (activeModel === ModelId.VOICE) {
+        return <VoiceChatView key="voice-view" onExit={onExitVoiceMode} />;
     }
 
     if (isComplexModelInDesignMode) {
@@ -371,6 +378,10 @@ const App: React.FC = () => {
         }
     }, [promptForNextModel]);
 
+    const handleExitVoiceMode = useCallback(() => {
+        setActiveModel(ModelId.ADAPTIVE);
+    }, []);
+
     const renderContent = () => {
         switch(currentView) {
             case 'settings':
@@ -387,17 +398,19 @@ const App: React.FC = () => {
                 return <MohoSearchApp onBack={() => setCurrentView('main')} />;
             case 'main':
             default:
+                const isVoiceModel = activeModel === ModelId.VOICE;
                 return (
                      <>
                         <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2">
                              <div className="w-auto justify-start">
-                                <AppDrawer onAppSelect={(view) => setCurrentView(view)} />
+                                {!isVoiceModel && <AppDrawer onAppSelect={(view) => setCurrentView(view)} />}
                             </div>
                              <ModelSelectorDropdown
                                 activeModel={activeModel} 
                                 setActiveModel={handleSetActiveModel}
                             />
                             <div className="flex items-center gap-2 w-auto justify-end">
+                                {isVoiceModel ? <div className="w-10 h-10" /> : (
                                 <button
                                     onClick={() => setCurrentView('settings')}
                                     className="p-2 rounded-full text-[var(--token-icon-secondary)] bg-[var(--token-main-surface-tertiary)]/60 hover:bg-[var(--token-main-surface-primary)] transition-colors"
@@ -405,6 +418,7 @@ const App: React.FC = () => {
                                 >
                                     <SettingsIcon className="w-5 h-5" />
                                 </button>
+                                )}
                             </div>
                         </header>
                         <ChatContainer
@@ -416,6 +430,7 @@ const App: React.FC = () => {
                             handleModelChangeAndSetPrompt={handleModelChangeAndSetPrompt}
                             promptForNextModel={promptForNextModel}
                             clearInitialPrompt={clearInitialPrompt}
+                            onExitVoiceMode={handleExitVoiceMode}
                         />
                     </>
                 );

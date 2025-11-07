@@ -18,10 +18,12 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line, Pie } from 'react-chartjs-2';
-import { CheckIcon, CopyIcon, GlobeIcon, FileTextIcon, ImagePlaceholderIcon, ChevronDownIcon, ChevronUpIcon, PaletteIcon, LayoutIcon, EditIcon, MusicIcon, ShareIcon, CodeIcon, MaximizeIcon, XIcon, ZoomInIcon, ZoomOutIcon, RefreshCwIcon, DownloadIcon, CheckCircleIcon, TrashIcon, PlusIcon } from './Icons';
-import type { Message, DeepThinking, ChartData, Source } from '../types';
+import { CheckIcon, CopyIcon, GlobeIcon, FileTextIcon, ImagePlaceholderIcon, ChevronDownIcon, ChevronUpIcon, PaletteIcon, LayoutIcon, EditIcon, MusicIcon, ShareIcon, CodeIcon, MaximizeIcon, XIcon, ZoomInIcon, ZoomOutIcon, RefreshCwIcon, DownloadIcon, CheckCircleIcon, TrashIcon, PlusIcon, Volume2Icon, LoaderIcon } from './Icons';
+import type { Message, DeepThinking, ChartData, Source, Attachment } from '../types';
 import { CodeBlock } from './CodeBlock';
 import { StatusWidget } from './StatusWidget';
+import { generateSpeech } from '../services/geminiService';
+import { decode, decodeAudioData } from '../utils/audio';
 
 ChartJS.register(
   CategoryScale,
@@ -36,6 +38,47 @@ ChartJS.register(
 );
 
 const TypingCursor: React.FC = () => <div className="typing-cursor"></div>;
+
+const YouTubeEmbed: React.FC<{ url: string }> = ({ url }) => {
+    const getVideoId = (videoUrl: string): string | null => {
+        try {
+            const urlObj = new URL(videoUrl);
+            if (urlObj.hostname === 'youtu.be') {
+                return urlObj.pathname.slice(1);
+            }
+            if (urlObj.hostname === 'www.youtube.com' || urlObj.hostname === 'youtube.com') {
+                return urlObj.searchParams.get('v');
+            }
+        } catch (e) {
+            console.error("Invalid URL for YouTube embed:", videoUrl, e);
+            return null;
+        }
+        return null;
+    };
+
+    const videoId = getVideoId(url.trim());
+
+    if (!videoId) {
+        return (
+            <div className="my-4 p-3 border border-red-500/30 bg-red-500/10 rounded-lg text-sm text-red-500">
+                رابط يوتيوب غير صالح: {url}
+            </div>
+        );
+    }
+
+    return (
+        <div className="my-4 overflow-hidden rounded-2xl border border-[var(--token-border-default)] shadow-lg bg-[var(--token-main-surface-tertiary)]" style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+             <iframe
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                src={`https://www.youtube.com/embed/${videoId}`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+            ></iframe>
+        </div>
+    );
+};
 
 const MermaidDiagram: React.FC<{ code: string }> = ({ code }) => {
     const [showCode, setShowCode] = useState(false);
@@ -434,13 +477,8 @@ const ResearchPlanDisplay: React.FC<{
 const SourceLink: React.FC<{ source: Source; index: number }> = ({ source, index }) => {
     const [faviconError, setFaviconError] = useState(false);
     const placeholderIcon = <GlobeIcon className="w-4 h-4 text-[var(--token-icon-secondary)]" />;
-
-    // The Gemini search grounding API returns redirect URLs (e.g., vertexaisearch.cloud.google.com...).
-    // The actual domain of the source is reliably provided in the `title` field.
-    // Therefore, we use `source.title` to fetch the favicon.
     const domain = source.title;
     const faviconUrl = domain ? `https://s2.googleusercontent.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=128` : '';
-    
     const displayText = source.title || new URL(source.uri).hostname;
 
     return (
@@ -466,20 +504,47 @@ const SourceLink: React.FC<{ source: Source; index: number }> = ({ source, index
     );
 };
 
+const FileSourceLink: React.FC<{ attachment: Attachment; index: number }> = ({ attachment, index }) => {
+    const getIcon = () => {
+         if (attachment.name.startsWith('drawing-')) return <PaletteIcon className="w-4 h-4 text-[var(--token-icon-secondary)]" />;
+         if (attachment.mimeType.startsWith('image/')) return <ImagePlaceholderIcon className="w-4 h-4 text-[var(--token-icon-secondary)]" />;
+         if (attachment.mimeType.startsWith('audio/')) return <MusicIcon className="w-4 h-4 text-[var(--token-icon-secondary)]" />;
+         return <FileTextIcon className="w-4 h-4 text-[var(--token-icon-secondary)]" />;
+    }
 
-const SourcesDisplay: React.FC<{ sources: Message['sources'] }> = ({ sources }) => {
-  if (!sources || sources.length === 0) return null;
+    return (
+        <div className="inline-flex items-center gap-2 text-xs bg-[var(--token-main-surface-tertiary)] hover:bg-[var(--token-border-default)] text-blue-600 dark:text-blue-400 pl-2 pr-3 py-1 rounded-full truncate max-w-xs" title={attachment.name}>
+            {getIcon()}
+            <span>{`${index + 1}. ${attachment.name}`}</span>
+        </div>
+    );
+};
+
+const SourcesDisplay: React.FC<{
+  webSources: Message['sources'];
+  fileSources: Message['referencedAttachments'];
+}> = ({ webSources, fileSources }) => {
+  const hasWebSources = webSources && webSources.length > 0;
+  const hasFileSources = fileSources && fileSources.length > 0;
+  if (!hasWebSources && !hasFileSources) return null;
+
+  const fileSourceStartIndex = hasWebSources ? webSources.length : 0;
+
   return (
     <div className="mt-4 pt-3 border-t border-[var(--token-border-default)]">
       <h5 className="font-semibold mb-2 text-sm text-[var(--token-text-secondary)]">المصادر:</h5>
       <div className="flex flex-wrap gap-2">
-        {sources.map((source, index) => (
-          <SourceLink key={index} source={source} index={index} />
+        {hasWebSources && webSources.map((source, index) => (
+          <SourceLink key={`web-${index}`} source={source} index={index} />
+        ))}
+        {hasFileSources && fileSources.map((attachment, index) => (
+          <FileSourceLink key={`file-${index}`} attachment={attachment} index={fileSourceStartIndex + index} />
         ))}
       </div>
     </div>
   );
 };
+
 
 const QrCodeDisplay: React.FC<{ svg: string }> = ({ svg }) => {
     const handleDownload = () => {
@@ -513,12 +578,16 @@ interface MessageRendererProps {
   setEditingMessageId: (id: string | null) => void;
   onEditMessage: (messageId: string, newContent: string) => void;
   onForward?: (content: string) => void;
+  onRegenerate?: (messageId: string) => void;
   isStreaming?: boolean;
 }
 
-export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExecuteResearch, editingMessageId, setEditingMessageId, onEditMessage, onForward, isStreaming }) => {
+export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExecuteResearch, editingMessageId, setEditingMessageId, onEditMessage, onForward, onRegenerate, isStreaming }) => {
   const [editedContent, setEditedContent] = useState(message.content);
   const [isCopied, setIsCopied] = useState(false);
+  const [audioState, setAudioState] = useState<'idle' | 'loading' | 'playing'>('idle');
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
   const handleSaveEdit = () => {
       onEditMessage(message.id, editedContent);
@@ -534,6 +603,48 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
     navigator.clipboard.writeText(message.content);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
+  };
+  
+  const handlePlayAudio = async () => {
+    if (audioState === 'loading') return;
+    if (audioState === 'playing') {
+        audioSourceRef.current?.stop();
+        setAudioState('idle');
+        return;
+    }
+
+    setAudioState('loading');
+    try {
+        const voice = localStorage.getItem('tts_voice') || 'Puck'; // Default to Puck
+        const cleanText = message.content.replace(/<quran>.*?<\/quran>/g, '');
+        if (!cleanText.trim()) {
+             setAudioState('idle');
+             return;
+        }
+
+        const base64Audio = await generateSpeech(cleanText, voice);
+        
+        if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+        }
+        const audioCtx = audioContextRef.current;
+
+        const audioBuffer = await decodeAudioData(decode(base64Audio), audioCtx, 24000, 1);
+        
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.onended = () => setAudioState('idle');
+        source.start();
+        
+        audioSourceRef.current = source;
+        setAudioState('playing');
+
+    } catch (error) {
+        console.error("Failed to play audio:", error);
+        alert("عذراً، لم نتمكن من تشغيل الصوت.");
+        setAudioState('idle');
+    }
   };
 
   if (message.role === 'user') {
@@ -560,52 +671,32 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
     const canEdit = !message.attachments || message.attachments.length === 0;
 
     return (
-      <div className="group flex justify-end">
-        <div className="max-w-2xl bg-[var(--token-interactive-bg-primary-container)] text-[var(--token-on-primary-container)] rounded-[20px] rounded-br-lg px-4 py-3 relative">
-            <div className="absolute top-1 left-1 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-                {onForward && (
-                    <button
-                        onClick={() => onForward(message.content)}
-                        className="p-1.5 rounded-full bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/80 hover:bg-black/10 dark:hover:bg-white/20"
-                        aria-label="إعادة توجيه الرسالة"
-                    >
-                        <ShareIcon className="w-3.5 h-3.5" />
-                    </button>
-                )}
-                 {canEdit && (
-                    <button
-                        onClick={() => {
-                            setEditedContent(message.content);
-                            setEditingMessageId(message.id);
-                        }}
-                        className="p-1.5 rounded-full bg-black/5 text-black/60 dark:bg-white/10 dark:text-white/80 hover:bg-black/10 dark:hover:bg-white/20"
-                        aria-label="تعديل الرسالة"
-                    >
-                        <EditIcon className="w-3.5 h-3.5" />
-                    </button>
-                )}
-            </div>
-            {message.attachments && message.attachments.length > 0 && (
-                <div className="mb-2 pb-2 border-b border-black/10 dark:border-white/20">
-                    <div className="flex flex-wrap gap-2">
-                        {message.attachments.map((file, index) => (
-                            <div key={index} className="flex items-center gap-2 bg-black/10 dark:bg-white/10 text-xs px-2 py-1 rounded-full">
-                                {file.name.startsWith('drawing-') ? (
-                                    <PaletteIcon className="w-3 h-3" />
-                                ) : file.mimeType.startsWith('image/') ? (
-                                    <ImagePlaceholderIcon className="w-3 h-3" />
-                                ) : file.mimeType.startsWith('audio/') ? (
-                                    <MusicIcon className="w-3 h-3" />
-                                ) : (
-                                    <FileTextIcon className="w-3 h-3" />
-                                )}
-                                <span>{file.name.startsWith('drawing-') ? 'رسم' : file.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+      <div className="group flex flex-col items-end">
+        <div className="max-w-2xl bg-[var(--token-interactive-bg-primary-container)] text-[var(--token-on-primary-container)] rounded-[20px] rounded-br-lg px-4 py-3">
+            <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+        </div>
+        <div className="flex items-center gap-2 mt-2 mr-2 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            {onForward && (
+                <button
+                    onClick={() => onForward(message.content)}
+                    className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[var(--token-main-surface-secondary)] text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]"
+                    aria-label="إعادة توجيه الرسالة"
+                >
+                    <ShareIcon className="w-3.5 h-3.5" />
+                </button>
             )}
-          <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+            {canEdit && (
+                <button
+                    onClick={() => {
+                        setEditedContent(message.content);
+                        setEditingMessageId(message.id);
+                    }}
+                    className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[var(--token-main-surface-secondary)] text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]"
+                    aria-label="تعديل الرسالة"
+                >
+                    <EditIcon className="w-3.5 h-3.5" />
+                </button>
+            )}
         </div>
       </div>
     );
@@ -613,15 +704,6 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
 
   return (
     <div className="group relative w-full max-w-4xl">
-       <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100 z-10">
-          <button
-              onClick={handleCopyMessage}
-              className="p-1.5 rounded-full text-[var(--token-icon-secondary)] bg-[var(--token-main-surface-primary)] hover:bg-[var(--token-main-surface-tertiary)]"
-              aria-label="نسخ الرسالة"
-          >
-              {isCopied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
-          </button>
-      </div>
       <div className="prose prose-sm md:prose-base max-w-none prose-p:text-[var(--token-text-secondary)] prose-headings:text-[var(--token-text-primary)] prose-strong:text-[var(--token-text-primary)] prose-li:text-[var(--token-text-secondary)] prose-blockquote:text-[var(--token-text-tertiary)] prose-table:text-[var(--token-text-secondary)] prose-th:text-[var(--token-text-primary)]">
         {message.statusWidget && <StatusWidget type={message.statusWidget.type} />}
         {message.deepThinking && <DeepThinkingDisplay deepThinking={message.deepThinking} />}
@@ -656,24 +738,53 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
               const match = /language-(\w+)/.exec(className || '');
               return <CodeBlock language={match ? match[1] : undefined} inline={inline} {...props}>{children}</CodeBlock>
             },
-            quran: ({node, ...props}) => <span className="font-quran text-lg leading-loose text-[var(--token-quran-text)]" {...props} />
+            quran: ({node, ...props}) => <span className="font-quran text-lg leading-loose text-[var(--token-quran-text)]" {...props} />,
+            youtube: ({node, ...props}: any) => {
+                if (node && node.children && node.children.length > 0 && node.children[0].type === 'text') {
+                    const url = node.children[0].value;
+                    return <YouTubeEmbed url={url} />;
+                }
+                return <p className="text-red-500">[Invalid YouTube tag]</p>;
+            },
           } as any}
         >
           {message.content}
         </ReactMarkdown>
          {isStreaming && <TypingCursor />}
       </div>
-       {(message.sources || message.designContent) && (
-        <div className="mt-4 pt-3 border-t border-[var(--token-border-default)] space-y-3">
-          {message.designContent && (
-              <div className="flex items-center gap-2 text-sm text-indigo-600 dark:text-indigo-400">
-                  <LayoutIcon className="w-4 h-4" />
-                  <span>تم إنشاء معاينة تصميم.</span>
-              </div>
-          )}
-          {message.sources && <SourcesDisplay sources={message.sources} />}
-        </div>
-      )}
+       <SourcesDisplay webSources={message.sources} fileSources={message.referencedAttachments} />
+       {message.designContent && (
+            <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
+                <LayoutIcon className="w-4 h-4" />
+                <span>تم إنشاء معاينة تصميم.</span>
+            </div>
+       )}
+       <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+                onClick={handleCopyMessage}
+                className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[var(--token-main-surface-secondary)] text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]"
+                aria-label="نسخ الرسالة"
+            >
+                {isCopied ? <CheckIcon className="w-3.5 h-3.5 text-green-500" /> : <CopyIcon className="w-3.5 h-3.5" />}
+            </button>
+             <button
+              onClick={handlePlayAudio}
+              className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[var(--token-main-surface-secondary)] text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]"
+              aria-label="تشغيل الصوت"
+              disabled={audioState === 'loading'}
+            >
+              {audioState === 'loading' ? <LoaderIcon className="w-3.5 h-3.5 animate-spin" /> : <Volume2Icon className="w-3.5 h-3.5" />}
+            </button>
+            {onRegenerate && (
+                <button
+                    onClick={() => onRegenerate(message.id)}
+                    className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-[var(--token-main-surface-secondary)] text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]"
+                    aria-label="إعادة الإجابة"
+                >
+                    <RefreshCwIcon className="w-3.5 h-3.5" />
+                </button>
+            )}
+       </div>
     </div>
   );
 };

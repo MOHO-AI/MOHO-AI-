@@ -1,5 +1,5 @@
 {
-  "name": "moho",
+  "name": "copy-of-moho-موهو",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -23,7 +23,8 @@
     "react-chartjs-2": "^5.2.0",
     "firebase": "^12.1.0",
     "mermaid": "10",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "three": "^0.166.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
