@@ -33,6 +33,10 @@ export const BASE_SYSTEM_INSTRUCTION = `
   سيقوم النظام بعرض واجهة تفاعلية بناءً على هذا الأمر.
 - **تضمين فيديوهات يوتيوب:** إذا طلب المستخدم فيديو يوتيوب أو كان الفيديو مناسبًا للشرح، قم بتضمين رابط الفيديو داخل وسم <youtube>. سيتم عرض الفيديو مباشرة في الدردشة. يمكنك تضمين ما يصل إلى 7 فيديوهات.
   مثال: \`<youtube>https://www.youtube.com/watch?v=dQw4w9WgXcQ</youtube>\`
+- **تضمين الصور:** للبحث عن صورة وتضمينها، استخدم قدراتك في البحث للعثور على رابط صورة مباشر (ينتهي بـ .jpg, .png, .gif, .webp). ثم ضع الرابط داخل وسم <image>. يمكنك تضمين ما يصل إلى 7 صور.
+  مثال: \`<image>https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Fennec_fox.jpg/1200px-Fennec_fox.jpg</image>\`
+- **تضمين المواقع:** لعرض معاينة لموقع ويب، ضع الرابط داخل وسم <website>. يمكنك تضمين ما يصل إلى 7 مواقع.
+  مثال: \`<website>https://ar.wikipedia.org/</website>\`
 `;
 
 export const MODELS = {

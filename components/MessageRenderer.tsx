@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useId, useCallback, useRef, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -18,7 +18,7 @@ import {
   Legend,
 } from 'chart.js';
 import { Bar, Line, Pie } from 'react-chartjs-2';
-import { CheckIcon, CopyIcon, GlobeIcon, FileTextIcon, ImagePlaceholderIcon, ChevronDownIcon, ChevronUpIcon, PaletteIcon, LayoutIcon, EditIcon, MusicIcon, ShareIcon, CodeIcon, MaximizeIcon, XIcon, ZoomInIcon, ZoomOutIcon, RefreshCwIcon, DownloadIcon, CheckCircleIcon, TrashIcon, PlusIcon, Volume2Icon, LoaderIcon } from './Icons';
+import { CheckIcon, CopyIcon, GlobeIcon, FileTextIcon, ImagePlaceholderIcon, ChevronDownIcon, ChevronUpIcon, PaletteIcon, LayoutIcon, EditIcon, MusicIcon, ShareIcon, CodeIcon, MaximizeIcon, XIcon, ZoomInIcon, ZoomOutIcon, RefreshCwIcon, DownloadIcon, CheckCircleIcon, TrashIcon, PlusIcon, Volume2Icon, LoaderIcon, LinkIcon } from './Icons';
 import type { Message, DeepThinking, ChartData, Source, Attachment } from '../types';
 import { CodeBlock } from './CodeBlock';
 import { StatusWidget } from './StatusWidget';
@@ -79,6 +79,225 @@ const YouTubeEmbed: React.FC<{ url: string }> = ({ url }) => {
         </div>
     );
 };
+
+const ImageLightbox: React.FC<{ src: string; onClose: () => void }> = ({ src, onClose }) => {
+    const [copyStatus, setCopyStatus] = useState<'idle' | 'copied_link' | 'copied_image' | 'error'>('idle');
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+    
+    const resetCopyStatus = useCallback(() => {
+        setTimeout(() => setCopyStatus('idle'), 2000);
+    }, []);
+
+    const handleCopyLink = useCallback(() => {
+        navigator.clipboard.writeText(src).then(() => {
+            setCopyStatus('copied_link');
+            resetCopyStatus();
+        }).catch(err => {
+            console.error('Failed to copy link:', err);
+            setCopyStatus('error');
+            resetCopyStatus();
+        });
+    }, [src, resetCopyStatus]);
+
+    const handleCopyImage = useCallback(async () => {
+        try {
+            const response = await fetch(src);
+            const blob = await response.blob();
+            // @ts-ignore
+            await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+            setCopyStatus('copied_image');
+            resetCopyStatus();
+        } catch (err) {
+            console.error('Failed to copy image:', err);
+            alert('لم نتمكن من نسخ الصورة إلى الحافظة. يمكنك محاولة حفظ الصورة بدلاً من ذلك.');
+            setCopyStatus('error');
+            resetCopyStatus();
+        }
+    }, [src, resetCopyStatus]);
+    
+    const handleDownload = useCallback(async () => {
+        try {
+            const response = await fetch(src);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            const filename = src.split('/').pop()?.split('?')[0] || 'image.jpg';
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (err) {
+            console.error('Failed to download image:', err);
+            alert('فشل تحميل الصورة. قد يكون السبب مشكلة في الشبكة أو قيود المصدر.');
+        }
+    }, [src]);
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col p-4 animate-fade-in" onClick={onClose} dir="ltr">
+            <header className="flex justify-end p-2 flex-shrink-0">
+                 <button onClick={onClose} className="p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors" aria-label="إغلاق"><XIcon className="w-6 h-6" /></button>
+            </header>
+            <main className="flex-1 flex items-center justify-center min-h-0" onClick={e => e.stopPropagation()}>
+                 <img src={src} alt="Enlarged view" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+            </main>
+            <footer className="p-4 text-center flex-shrink-0" onClick={e => e.stopPropagation()}>
+                <div className="inline-flex items-center gap-2 p-2 bg-black/30 backdrop-blur-md rounded-full border border-white/20">
+                    <button onClick={handleDownload} className="flex items-center gap-2 px-4 py-2 rounded-full text-white hover:bg-white/20 transition-colors"><DownloadIcon className="w-5 h-5"/><span>تحميل</span></button>
+                    <button onClick={handleCopyLink} className="flex items-center gap-2 px-4 py-2 rounded-full text-white hover:bg-white/20 transition-colors">
+                        {copyStatus === 'copied_link' ? <CheckIcon className="w-5 h-5"/> : <LinkIcon className="w-5 h-5"/>}
+                        <span>{copyStatus === 'copied_link' ? 'تم نسخ الرابط' : 'نسخ الرابط'}</span>
+                    </button>
+                    <button onClick={handleCopyImage} className="flex items-center gap-2 px-4 py-2 rounded-full text-white hover:bg-white/20 transition-colors">
+                        {copyStatus === 'copied_image' ? <CheckIcon className="w-5 h-5"/> : <CopyIcon className="w-5 h-5"/>}
+                        <span>{copyStatus === 'copied_image' ? 'تم نسخ الصورة' : 'نسخ الصورة'}</span>
+                    </button>
+                </div>
+            </footer>
+        </div>
+    );
+};
+
+const ImageEmbed: React.FC<{ url: string }> = ({ url }) => {
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [error, setError] = useState(false);
+
+    if (error) {
+        return (
+            <div className="my-4 p-3 border border-red-500/30 bg-red-500/10 rounded-lg text-sm text-red-500 flex items-center gap-2">
+                <ImagePlaceholderIcon className="w-5 h-5"/> <span>تعذر تحميل الصورة: {url}</span>
+            </div>
+        );
+    }
+    
+    return (
+        <>
+            <button 
+                onClick={() => setIsLightboxOpen(true)}
+                className="my-4 block w-full max-w-md mx-auto bg-[var(--token-main-surface-tertiary)] rounded-2xl border border-[var(--token-border-default)] overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 group"
+            >
+                <img 
+                    src={url} 
+                    alt="Embedded image from MOHO" 
+                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300" 
+                    onError={() => setError(true)}
+                    loading="lazy"
+                />
+            </button>
+            {isLightboxOpen && <ImageLightbox src={url} onClose={() => setIsLightboxOpen(false)} />}
+        </>
+    );
+};
+
+const WebsiteLightbox: React.FC<{ url: string; onClose: () => void }> = ({ url, onClose }) => {
+    const [iframeError, setIframeError] = useState(false);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            try {
+                if (iframeRef.current && (!iframeRef.current.contentWindow || iframeRef.current.contentWindow.location.href === 'about:blank')) {
+                    setIframeError(true);
+                }
+            } catch (e) {
+                setIframeError(true);
+            }
+        }, 5000);
+        return () => clearTimeout(timer);
+    }, [url]);
+
+    return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex flex-col p-4 animate-fade-in" dir="ltr">
+            <header className="flex items-center justify-between p-2 flex-shrink-0 bg-gray-800/50 rounded-t-lg">
+                <div className="flex items-center gap-2">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 text-sm bg-blue-500 text-white rounded-full hover:bg-blue-600 font-semibold">فتح في علامة تبويب جديدة</a>
+                </div>
+                <button onClick={onClose} className="p-2.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors" aria-label="إغلاق"><XIcon className="w-6 h-6" /></button>
+            </header>
+            <main className="flex-1 bg-white rounded-b-lg overflow-hidden relative">
+                {iframeError && (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 bg-gray-100">
+                        <h3 className="text-lg font-bold text-gray-800">تعذر عرض الموقع</h3>
+                        <p className="text-gray-600 mt-2">قد يمنع هذا الموقع تضمينه في صفحات أخرى لأسباب أمنية.</p>
+                        <a href={url} target="_blank" rel="noopener noreferrer" className="mt-4 px-4 py-2 text-sm bg-blue-500 text-white rounded-full hover:bg-blue-600 font-semibold">
+                            فتح الموقع مباشرة
+                        </a>
+                    </div>
+                )}
+                <iframe 
+                    ref={iframeRef}
+                    src={url} 
+                    title="Website Preview" 
+                    className={`w-full h-full border-0 ${iframeError ? 'hidden' : 'block'}`}
+                    sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                    onError={() => setIframeError(true)}
+                    onLoad={(e) => {
+                        try {
+                            if (e.currentTarget.contentWindow && e.currentTarget.contentWindow.location.href !== 'about:blank') {
+                                setIframeError(false);
+                            }
+                        } catch (e) {
+                            setIframeError(true);
+                        }
+                    }}
+                />
+            </main>
+        </div>
+    );
+};
+
+const WebsiteEmbed: React.FC<{ url: string }> = ({ url }) => {
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [faviconError, setFaviconError] = useState(false);
+
+    const { domain, faviconUrl, sanitizedUrl } = useMemo(() => {
+        try {
+            const urlObj = new URL(url);
+            const domain = urlObj.hostname;
+            return {
+                domain,
+                faviconUrl: `https://s2.googleusercontent.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=64`,
+                sanitizedUrl: url
+            };
+        } catch {
+            return { domain: url, faviconUrl: '', sanitizedUrl: url };
+        }
+    }, [url]);
+    
+    return (
+        <>
+            <button 
+                onClick={() => setIsLightboxOpen(true)}
+                className="my-4 block w-full p-4 bg-[var(--token-main-surface-tertiary)] rounded-2xl border border-[var(--token-border-default)] hover:bg-[var(--token-surface-container-high)] transition-colors text-right"
+            >
+                <div className="flex items-center gap-4">
+                     <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-[var(--token-surface-container-highest)] rounded-lg">
+                        {faviconError || !faviconUrl ? (
+                            <GlobeIcon className="w-6 h-6 text-[var(--token-on-surface-variant)]" />
+                        ) : (
+                            <img src={faviconUrl} alt={`Favicon for ${domain}`} className="w-8 h-8" onError={() => setFaviconError(true)} />
+                        )}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="font-semibold text-[var(--token-on-surface)] truncate">{domain}</p>
+                        <p className="text-sm text-[var(--token-on-surface-variant)] truncate">{sanitizedUrl}</p>
+                    </div>
+                </div>
+            </button>
+            {isLightboxOpen && <WebsiteLightbox url={sanitizedUrl} onClose={() => setIsLightboxOpen(false)} />}
+        </>
+    );
+};
+
 
 const MermaidDiagram: React.FC<{ code: string }> = ({ code }) => {
     const [showCode, setShowCode] = useState(false);
@@ -745,6 +964,20 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
                     return <YouTubeEmbed url={url} />;
                 }
                 return <p className="text-red-500">[Invalid YouTube tag]</p>;
+            },
+            image: ({node, ...props}: any) => {
+                if (node && node.children && node.children.length > 0 && node.children[0].type === 'text') {
+                    const url = node.children[0].value;
+                    return <ImageEmbed url={url} />;
+                }
+                return <p className="text-red-500">[Invalid Image tag]</p>;
+            },
+            website: ({node, ...props}: any) => {
+                if (node && node.children && node.children.length > 0 && node.children[0].type === 'text') {
+                    const url = node.children[0].value;
+                    return <WebsiteEmbed url={url} />;
+                }
+                return <p className="text-red-500">[Invalid Website tag]</p>;
             },
           } as any}
         >

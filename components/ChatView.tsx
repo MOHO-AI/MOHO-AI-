@@ -492,7 +492,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 const updatedMessage = { ...m, ...parsedData, sources };
                 if (parsedData.whiteboardSteps) {
                     // FIX: Explicitly type the 'step' parameter to resolve the 'unknown' type error.
-                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map((step: any) => 
+                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map((step: WhiteboardStep) => 
                         step.type === 'generate_image' 
                             ? { type: 'image_loading', content: step.content } 
                             : step
