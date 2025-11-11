@@ -19,8 +19,6 @@ const SplashScreen: React.FC = () => {
     const [phase, setPhase] = useState(0);
 
     useEffect(() => {
-        // FIX: Explicitly use `window.setTimeout` and `window.clearTimeout` to avoid type conflicts
-        // between Node.js's `Timeout` object and the browser's `number` for timeout IDs.
         const timers: number[] = [];
         timers.push(window.setTimeout(() => setPhase(1), 100)); // Fade in fog
         timers.push(window.setTimeout(() => setPhase(2), 1000)); // Fade in line 1
@@ -154,23 +152,63 @@ const ModelSelectorDropdown: React.FC<{
 };
 
 
-interface DesignModeViewProps extends React.ComponentProps<typeof ChatView> {
+interface DesignModeViewProps {
+    modelId: ModelId;
+    isDesignModeEnabled: boolean;
+    toggleDesignMode: () => void;
+    onModelChangeAndSetPrompt: (modelId: ModelId, prompt: string) => void;
+    initialPrompt: string | null;
+    clearInitialPrompt: () => void;
+    designName: string;
     designContent: string;
-    setDesignContent: (content: string) => void;
+    isDesignStreaming: boolean;
+    onDesignStreamUpdate: (chunk: string) => void;
+    onDesignMeta: (meta: { name: string }) => void;
+    onDesignStreamStart: () => void;
+    onDesignStreamEnd: () => void;
 }
 
-const DesignModeView: React.FC<DesignModeViewProps> = ({ designContent, setDesignContent, ...chatViewProps }) => {
-    const [mobileView, setMobileView] = useState<'design' | 'chat'>('chat');
+const DesignModeView: React.FC<DesignModeViewProps> = ({ 
+    designName,
+    designContent,
+    isDesignStreaming,
+    onDesignStreamUpdate,
+    onDesignMeta,
+    onDesignStreamStart,
+    onDesignStreamEnd,
+    ...chatViewProps 
+}) => {
+    const [mobileView, setMobileView] = useState<'chat' | 'design'>('chat');
+    
+    // Automatically switch to design view on mobile when streaming starts
+    useEffect(() => {
+        if(isDesignStreaming) {
+            setMobileView('design');
+        }
+    }, [isDesignStreaming]);
+
 
     return (
         <div className="flex-1 w-full h-full overflow-hidden">
             {/* Desktop View */}
             <div className="hidden md:grid grid-cols-2 gap-4 p-4 w-full h-full">
                 <div className="flex flex-col min-h-0 pt-16 h-full">
-                    <ChatView {...chatViewProps} setDesignContent={setDesignContent} key={`${chatViewProps.modelId}-design-desktop`} />
+                    <ChatView
+                        {...chatViewProps}
+                        onDesignStreamUpdate={onDesignStreamUpdate}
+                        onDesignMeta={onDesignMeta}
+                        onDesignStreamStart={onDesignStreamStart}
+                        onDesignStreamEnd={onDesignStreamEnd}
+                        key={`${chatViewProps.modelId}-design-desktop`}
+                    />
                 </div>
-                <div className="flex flex-col min-h-0 pt-16 h-full">
-                    <DesignPreview code={designContent} setCode={setDesignContent} />
+                <div className="flex flex-col min-h-0 h-full">
+                    <DesignPreview
+                        code={designContent}
+                        designName={designName}
+                        isStreaming={isDesignStreaming}
+                        onRunCode={() => { /* re-render is handled by state change now */ }}
+                    />
                 </div>
             </div>
             {/* Mobile View */}
@@ -182,7 +220,7 @@ const DesignModeView: React.FC<DesignModeViewProps> = ({ designContent, setDesig
                                 onClick={() => setMobileView('design')}
                                 className={`flex-1 py-1.5 text-sm font-medium rounded-full transition-colors ${mobileView === 'design' ? 'bg-[var(--token-main-surface-primary)] shadow-sm' : 'text-[var(--token-text-secondary)]'}`}
                             >
-                                معاينة التصميم
+                                التصميم
                             </button>
                             <button
                                 onClick={() => setMobileView('chat')}
@@ -194,10 +232,22 @@ const DesignModeView: React.FC<DesignModeViewProps> = ({ designContent, setDesig
                     </div>
                 </div>
                 <div className={`flex-1 min-h-0 ${mobileView === 'chat' ? 'flex flex-col' : 'hidden'}`}>
-                    <ChatView {...chatViewProps} setDesignContent={setDesignContent} key={`${chatViewProps.modelId}-design-mobile`} />
+                    <ChatView
+                        {...chatViewProps}
+                        onDesignStreamUpdate={onDesignStreamUpdate}
+                        onDesignMeta={onDesignMeta}
+                        onDesignStreamStart={onDesignStreamStart}
+                        onDesignStreamEnd={onDesignStreamEnd}
+                        key={`${chatViewProps.modelId}-design-mobile`}
+                    />
                 </div>
                 <div className={`flex-1 min-h-0 ${mobileView === 'design' ? 'flex flex-col' : 'hidden'}`}>
-                    <DesignPreview code={designContent} setCode={setDesignContent} />
+                    <DesignPreview
+                        code={designContent}
+                        designName={designName}
+                        isStreaming={isDesignStreaming}
+                        onRunCode={() => { /* re-render is handled by state change now */ }}
+                    />
                 </div>
             </div>
         </div>
@@ -209,23 +259,34 @@ const ChatContainer: React.FC<{
     activeModel: ModelId;
     isDesignMode: boolean;
     toggleDesignMode: () => void;
-    designContent: string;
-    setDesignContent: (content: string) => void;
     handleModelChangeAndSetPrompt: (modelId: ModelId, prompt: string) => void;
     promptForNextModel: string | null;
     clearInitialPrompt: () => void;
     onExitVoiceMode: () => void;
+    designName: string;
+    designContent: string;
+    isDesignStreaming: boolean;
+    onDesignStreamUpdate: (chunk: string) => void;
+    onDesignMeta: (meta: { name: string }) => void;
+    onDesignStreamStart: () => void;
+    onDesignStreamEnd: () => void;
 }> = ({
     activeModel,
     isDesignMode,
     toggleDesignMode,
-    designContent,
-    setDesignContent,
     handleModelChangeAndSetPrompt,
     promptForNextModel,
     clearInitialPrompt,
     onExitVoiceMode,
+    designName,
+    designContent,
+    isDesignStreaming,
+    onDesignStreamUpdate,
+    onDesignMeta,
+    onDesignStreamStart,
+    onDesignStreamEnd,
 }) => {
+    
     const isComplexModelInDesignMode = activeModel === ModelId.QUALITY && isDesignMode;
 
     const chatWrapperClasses = "flex-1 flex flex-col min-h-0 w-full h-full overflow-hidden pt-16";
@@ -240,8 +301,13 @@ const ChatContainer: React.FC<{
     if (isComplexModelInDesignMode) {
         return (
             <DesignModeView
+                designName={designName}
                 designContent={designContent}
-                setDesignContent={setDesignContent}
+                isDesignStreaming={isDesignStreaming}
+                onDesignStreamUpdate={onDesignStreamUpdate}
+                onDesignMeta={onDesignMeta}
+                onDesignStreamStart={onDesignStreamStart}
+                onDesignStreamEnd={onDesignStreamEnd}
                 modelId={activeModel}
                 isDesignModeEnabled={isDesignMode}
                 toggleDesignMode={toggleDesignMode}
@@ -259,7 +325,6 @@ const ChatContainer: React.FC<{
                 key={activeModel}
                 isDesignModeEnabled={isDesignMode}
                 toggleDesignMode={toggleDesignMode}
-                setDesignContent={setDesignContent}
                 onModelChangeAndSetPrompt={handleModelChangeAndSetPrompt}
                 initialPrompt={promptForNextModel}
                 clearInitialPrompt={clearInitialPrompt}
@@ -321,9 +386,13 @@ const App: React.FC = () => {
     const [activeModel, setActiveModel] = useState<ModelId>(ModelId.ADAPTIVE);
     const [currentView, setCurrentView] = useState<'main' | 'settings' | 'teacherApp' | 'noorAlIslam' | 'weatherApp' | 'appStores' | 'mohoSearch'>('main');
     const [isDesignMode, setIsDesignMode] = useState(false);
-    const [designContent, setDesignContent] = useState('');
     const [promptForNextModel, setPromptForNextModel] = useState<string | null>(null);
     const [showSplash, setShowSplash] = useState(!sessionStorage.getItem('splashShown'));
+    
+    // State for Design Mode, managed at the top level for performance
+    const [designName, setDesignName] = useState('تصميم جديد');
+    const [designContent, setDesignContent] = useState('');
+    const [isDesignStreaming, setIsDesignStreaming] = useState(false);
 
     useEffect(() => {
         if (showSplash) {
@@ -356,7 +425,6 @@ const App: React.FC = () => {
         setCurrentView('main');
         if (modelId !== ModelId.QUALITY) {
             setIsDesignMode(false);
-            setDesignContent('');
         }
     }, [activeModel, currentView]);
     
@@ -381,6 +449,27 @@ const App: React.FC = () => {
     const handleExitVoiceMode = useCallback(() => {
         setActiveModel(ModelId.ADAPTIVE);
     }, []);
+
+    // Callbacks for Design Mode, passed down to ChatView
+    const handleDesignStreamStart = useCallback(() => {
+        setDesignContent(''); // Clear previous content on new stream
+        setIsDesignStreaming(true);
+    }, []);
+
+    const handleDesignStreamUpdate = useCallback((chunk: string) => {
+        setDesignContent(chunk);
+    }, []);
+    
+    const handleDesignMeta = useCallback((meta: { name: string }) => {
+        if (meta.name) {
+            setDesignName(meta.name);
+        }
+    }, []);
+
+    const handleDesignStreamEnd = useCallback(() => {
+        setIsDesignStreaming(false);
+    }, []);
+
 
     const renderContent = () => {
         switch(currentView) {
@@ -425,12 +514,17 @@ const App: React.FC = () => {
                             activeModel={activeModel}
                             isDesignMode={isDesignMode}
                             toggleDesignMode={toggleDesignMode}
-                            designContent={designContent}
-                            setDesignContent={setDesignContent}
                             handleModelChangeAndSetPrompt={handleModelChangeAndSetPrompt}
                             promptForNextModel={promptForNextModel}
                             clearInitialPrompt={clearInitialPrompt}
                             onExitVoiceMode={handleExitVoiceMode}
+                            designName={designName}
+                            designContent={designContent}
+                            isDesignStreaming={isDesignStreaming}
+                            onDesignStreamUpdate={handleDesignStreamUpdate}
+                            onDesignMeta={handleDesignMeta}
+                            onDesignStreamStart={handleDesignStreamStart}
+                            onDesignStreamEnd={handleDesignStreamEnd}
                         />
                     </>
                 );

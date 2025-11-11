@@ -64,7 +64,6 @@ export interface Message {
   isPlanExecuted?: boolean;
   sources?: Source[];
   referencedAttachments?: Attachment[];
-  designContent?: string | null;
   componentPlaceholders?: { [key: string]: { type: 'chart' | 'mermaid' | 'qr'; data: any; } };
   callStatus?: 'calling' | 'completed' | null;
   whiteboardSteps?: WhiteboardStep[];

@@ -35,8 +35,6 @@ export const DesignPreview: React.FC<DesignPreviewProps> = ({ code, designName, 
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
   const [isFullScreen, setIsFullScreen] = useState(false);
   const codeEndRef = useRef<HTMLDivElement>(null);
-  const [runKey, setRunKey] = useState(0);
-
 
   useEffect(() => {
     // Automatically switch to code view when streaming starts
@@ -76,7 +74,7 @@ export const DesignPreview: React.FC<DesignPreviewProps> = ({ code, designName, 
   };
 
   const handleRunAndPreview = () => {
-    setRunKey(k => k + 1); // This forces iframe to re-render with new code
+    onRunCode();
     setActiveTab('preview');
   };
 
@@ -112,7 +110,7 @@ export const DesignPreview: React.FC<DesignPreviewProps> = ({ code, designName, 
             <div className="flex-1 min-h-0 relative">
                 <div className={`w-full h-full ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
                     <iframe
-                        key={runKey}
+                        key={Date.now()}
                         srcDoc={code || placeholder}
                         title="Design Preview"
                         sandbox="allow-scripts allow-same-origin"

@@ -489,14 +489,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
             processedWhiteboardRef.current.add(assistantMessageId);
             (async () => {
                 const finalSteps = await Promise.all(
-                    parsedData.whiteboardSteps!.map(async (step): Promise<WhiteboardStep> => {
-                        // FIX: Explicitly cast step to WhiteboardStep to resolve potential type inference issues.
-                        const typedStep = step as WhiteboardStep;
-                        if (typedStep.type === 'generate_image') {
-                            try { return { type: 'image', content: await generateImage(typedStep.content) }; }
+                    parsedData.whiteboardSteps!.map(async (step: WhiteboardStep): Promise<WhiteboardStep> => {
+                        if (step.type === 'generate_image') {
+                            try { return { type: 'image', content: await generateImage(step.content) }; }
                             catch (e) { return { type: 'text', content: `**[فشل إنشاء الصورة]**` }; }
                         }
-                        return typedStep;
+                        return step;
                     })
                 );
                 setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, whiteboardSteps: finalSteps } : m));
@@ -508,11 +506,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
             ...parsedData,
             sources,
             content: parsedData.content.replace(scrollPlayRegex, ''),
-// FIX: Explicitly cast step to WhiteboardStep to resolve potential type inference issues.
-            whiteboardSteps: parsedData.whiteboardSteps?.map((step) => {
-                const typedStep = step as WhiteboardStep;
-                return typedStep.type === 'generate_image' ? { type: 'image_loading', content: typedStep.content } : typedStep;
-            }),
+            whiteboardSteps: parsedData.whiteboardSteps?.map((step: WhiteboardStep) => 
+                step.type === 'generate_image' ? { type: 'image_loading', content: step.content } : step
+            ),
         } : m));
       }
       if(hasStartedDesignStream) onDesignStreamEnd?.();

@@ -986,12 +986,6 @@ export const MessageRenderer: React.FC<MessageRendererProps> = ({ message, onExe
          {isStreaming && <TypingCursor />}
       </div>
        <SourcesDisplay webSources={message.sources} fileSources={message.referencedAttachments} />
-       {message.designContent && (
-            <div className="mt-2 text-sm text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
-                <LayoutIcon className="w-4 h-4" />
-                <span>تم إنشاء معاينة تصميم.</span>
-            </div>
-       )}
        <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
                 onClick={handleCopyMessage}
