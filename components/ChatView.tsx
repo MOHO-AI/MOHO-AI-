@@ -20,16 +20,13 @@ interface ChatViewProps {
   setPlayLocation?: (location: QuranScrollLocation | null) => void;
   isDesignModeEnabled?: boolean;
   toggleDesignMode?: () => void;
+  setDesignContent?: (content: string) => void;
   onModelChangeAndSetPrompt?: (modelId: ModelId, prompt: string) => void;
   initialPrompt?: string | null;
   clearInitialPrompt?: () => void;
   systemInstructionOverride?: string;
   inputFontClass?: string;
   onNewMessages?: (messages: Message[]) => void;
-  onDesignStreamUpdate?: (chunk: string) => void;
-  onDesignMeta?: (meta: { name: string }) => void;
-  onDesignStreamStart?: () => void;
-  onDesignStreamEnd?: () => void;
 }
 
 const ForwardModal: React.FC<{
@@ -103,48 +100,13 @@ const LoadingIndicator: React.FC = () => (
     </div>
 );
 
-interface ParsedContent {
-    content: string;
-    componentPlaceholders?: NonNullable<Message['componentPlaceholders']>;
-    deepThinking?: DeepThinking | null;
-    designMeta?: { name: string } | null;
-    designChunk?: string | null;
-    isDesignStreaming: boolean;
-    whiteboardSteps?: WhiteboardStep[] | null;
-    statusWidget?: Message['statusWidget'];
-}
-
-const parseMessageContent = async (rawContent: string): Promise<ParsedContent> => {
+const parseMessageContent = async (rawContent: string): Promise<Partial<Message>> => {
     let content = rawContent;
     const componentPlaceholders: NonNullable<Message['componentPlaceholders']> = {};
     let deepThinking: DeepThinking | null = null;
-    let designMeta: { name: string } | null = null;
-    let designChunk: string | null = null;
-    let isDesignStreaming = false;
+    let designContent: string | null = null;
     let whiteboardSteps: WhiteboardStep[] | null = null;
     let statusWidget: Message['statusWidget'] = null;
-
-    // Design Meta must be processed first and removed
-    const designMetaMatch = content.match(/\[DESIGN_META:({.*?})\]\s*/);
-    if (designMetaMatch && designMetaMatch[1]) {
-        try {
-            designMeta = JSON.parse(designMetaMatch[1]);
-            content = content.replace(designMetaMatch[0], '');
-        } catch (e) {
-            console.warn("Could not parse design meta JSON.", e);
-        }
-    }
-    
-    // Extract design code block
-    const designBlockRegex = /```html:design\n([\s\S]*?)```/;
-    const designBlockMatch = content.match(designBlockRegex);
-    if (designBlockMatch) {
-        isDesignStreaming = true;
-        designChunk = designBlockMatch[1];
-        // Remove the design block from the chat content completely
-        content = content.replace(designBlockRegex, '').trim();
-    }
-
 
     const processComponentBlocks = async (
         regex: RegExp,
@@ -166,6 +128,7 @@ const parseMessageContent = async (rawContent: string): Promise<ParsedContent> =
                 const placeholder = `\n\n<div data-component-id="${id}"></div>\n\n`;
                 tempContent = tempContent.replace(match[0], placeholder);
             } catch (e) {
+                console.warn(`Could not parse component block type ${type}, might be streaming.`, e);
                 allSucceeded = false;
                 break; 
             }
@@ -191,15 +154,23 @@ const parseMessageContent = async (rawContent: string): Promise<ParsedContent> =
     await processComponentBlocks(/```json:chart\n([\s\S]*?)\n```/g, 'chart', chartParser);
     await processComponentBlocks(/```mermaid\n([\s\S]*?)\n```/g, 'mermaid', mermaidParser);
     
-    const dtRegex = /\*\*\[DEEP_THINKING_START\]\*\*\n([\s\S]*?)\n\*\*\[DEEP_THINKING_END\]\*\*/;
-    const dtMatch = content.match(dtRegex);
-    if (dtMatch && dtMatch[1]){
-        const dtBlock = dtMatch[1];
+    const extractBlock = (regex: RegExp): string | null => {
+        const match = content.match(regex);
+        if (match && match[1]) {
+            content = content.replace(regex, '').trim();
+            return match[1];
+        }
+        return null;
+    };
+    
+    const dtBlock = extractBlock(/\*\*\[DEEP_THINKING_START\]\*\*\n([\s\S]*?)\n\*\*\[DEEP_THINKING_END\]\*\*/);
+    if (dtBlock) {
         const methodMatch = dtBlock.match(/\*\*المنهجية:\*\*\s*(.*)/);
         const planMatch = dtBlock.match(/\*\*الخطة:\*\*\s*([\s\S]*)/);
         if (methodMatch && planMatch) {
             deepThinking = { method: methodMatch[1].trim(), plan: planMatch[1].trim().split('\n').map(s => s.replace(/-\s*/, '').trim()).filter(Boolean) };
-            content = content.replace(dtRegex, '').trim();
+        } else {
+             content = `**[DEEP_THINKING_START]**\n${dtBlock}\n**[DEEP_THINKING_END]**\n` + content;
         }
     }
     
@@ -217,6 +188,7 @@ const parseMessageContent = async (rawContent: string): Promise<ParsedContent> =
                 }
             } catch (e) {
                 parsingFailed = true;
+                console.warn("Incomplete or invalid whiteboard JSON, will retry on next chunk.", e);
                 break;
             }
         }
@@ -225,6 +197,8 @@ const parseMessageContent = async (rawContent: string): Promise<ParsedContent> =
             content = content.replace(whiteboardRegex, '').trim();
         }
     }
+
+    designContent = extractBlock(/```html:design\n([\s\S]*?)\n```/);
     
     content = content.replace(/\[FETCH_WEATHER\]\s*/g, () => {
         statusWidget = { type: 'weather' };
@@ -235,7 +209,7 @@ const parseMessageContent = async (rawContent: string): Promise<ParsedContent> =
         return '';
     });
     
-    return { content, componentPlaceholders, deepThinking, designMeta, designChunk, isDesignStreaming, whiteboardSteps, statusWidget };
+    return { content, componentPlaceholders, deepThinking, designContent, whiteboardSteps, statusWidget };
 };
 
 
@@ -245,10 +219,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setPlayLocation, 
     isDesignModeEnabled, 
     toggleDesignMode, 
-    onDesignStreamUpdate,
-    onDesignMeta,
-    onDesignStreamStart,
-    onDesignStreamEnd,
+    setDesignContent,
     onModelChangeAndSetPrompt,
     initialPrompt,
     clearInitialPrompt,
@@ -376,7 +347,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
   
   const handleStopGeneration = () => {
     stopGenerationRef.current = true;
-    onDesignStreamEnd?.();
   };
 
   const handleSendMessage = useCallback(async (
@@ -388,7 +358,6 @@ export const ChatView: React.FC<ChatViewProps> = ({
     
     const startTime = Date.now();
     stopGenerationRef.current = false;
-    let hasStartedDesignStream = false;
     
     if (!isHiddenFromHistory) {
       setInput('');
@@ -406,15 +375,32 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setMessages(prev => [...prev, userMessage]);
     }
 
-    if (modelId === ModelId.RESEARCHER && !isHiddenFromHistory) {
+    const isResearchMode = modelId === ModelId.RESEARCHER && !isHiddenFromHistory;
+
+    if (isResearchMode) {
         setIsLoading(true);
         setIsPerformingWebSearch(true);
         try {
             const plan = await getResearchPlan(messageContent);
-            const planMessage: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: '', researchPlan: plan, isPlanExecuted: false };
-            setMessages(prev => [...prev, planMessage]);
+            if (plan && plan.length > 0) {
+                const planMessage: Message = {
+                    id: (Date.now() + 1).toString(),
+                    role: 'assistant',
+                    content: '',
+                    researchPlan: plan,
+                    isPlanExecuted: false,
+                };
+                setMessages(prev => [...prev, planMessage]);
+            } else {
+                throw new Error("Failed to generate a research plan.");
+            }
         } catch (e) {
-            const errorMessage: Message = { id: (Date.now() + 1).toString(), role: 'assistant', content: "عذراً، لم أتمكن من إنشاء خطة بحث. هل يمكنك إعادة صياغة طلبك؟" };
+            console.error(e);
+            const errorMessage: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: "عذراً، لم أتمكن من إنشاء خطة بحث. هل يمكنك إعادة صياغة طلبك أو تبسيطه؟"
+            };
             setMessages(prev => [...prev, errorMessage]);
         } finally {
             setIsLoading(false);
@@ -427,7 +413,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setIsLoading(true);
     
     const assistantMessageId = (Date.now() + 1).toString();
-    const assistantMessage: Message = { id: assistantMessageId, role: 'assistant', content: '', referencedAttachments: userMessage.attachments };
+    let assistantMessage: Message = { 
+        id: assistantMessageId, 
+        role: 'assistant', 
+        content: '',
+        referencedAttachments: userMessage.attachments
+    };
     setMessages(prev => [...prev, assistantMessage]);
     
     const history = (isHiddenFromHistory ? messagesRef.current : [...messagesRef.current, userMessage])
@@ -448,7 +439,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       let finalContent = '';
       let sources: Message['sources'] = [];
       
-      const stream = await generateContentStream(modelId, userContentForApi, history, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride);
+      const stream: AsyncGenerator<GenerateContentResponse> = await generateContentStream(modelId, userContentForApi, history, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride);
 
       for await (const chunk of stream) {
         if (isPerformingWebSearch) setIsPerformingWebSearch(false);
@@ -457,25 +448,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
         finalContent += chunk.text;
         sources = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((s: any) => s.web).filter(Boolean) || sources;
         
-        const parsedData = await parseMessageContent(finalContent);
-        
-        if (parsedData.designMeta && onDesignMeta) {
-          onDesignMeta(parsedData.designMeta);
-        }
-
-        if (parsedData.isDesignStreaming) {
-            if (!hasStartedDesignStream) {
-                onDesignStreamStart?.();
-                hasStartedDesignStream = true;
-            }
-            if(parsedData.designChunk !== null) {
-                onDesignStreamUpdate?.(parsedData.designChunk);
-            }
-        }
-        
         const scrollPlayRegex = /\[(SCROLL_TO|PLAY_AYAH):({.*?})\]\s*/g;
         let match;
-        const tempContentForExec = finalContent; // Use a temp var to avoid modifying the loop source
+        const tempContentForExec = finalContent;
         while((match = scrollPlayRegex.exec(tempContentForExec)) !== null) {
             try {
                 const command = match[1];
@@ -485,50 +460,66 @@ export const ChatView: React.FC<ChatViewProps> = ({
             } catch(e) { console.error("Failed to parse command:", e); }
         }
         
+        const contentToParse = finalContent.replace(scrollPlayRegex, '');
+        
+        const parsedData = await parseMessageContent(contentToParse);
+        
+        if (parsedData.designContent && setDesignContent) setDesignContent(parsedData.designContent);
+
         if (parsedData.whiteboardSteps && !processedWhiteboardRef.current.has(assistantMessageId)) {
             processedWhiteboardRef.current.add(assistantMessageId);
             (async () => {
                 const finalSteps = await Promise.all(
                     parsedData.whiteboardSteps!.map(async (step): Promise<WhiteboardStep> => {
-                        // FIX: Explicitly cast step to WhiteboardStep to resolve potential type inference issues.
-                        const typedStep = step as WhiteboardStep;
-                        if (typedStep.type === 'generate_image') {
-                            try { return { type: 'image', content: await generateImage(typedStep.content) }; }
-                            catch (e) { return { type: 'text', content: `**[فشل إنشاء الصورة]**` }; }
+                        if (step.type === 'generate_image') {
+                            try {
+                                const imageUrl = await generateImage(step.content);
+                                return { type: 'image', content: imageUrl };
+                            } catch (e) {
+                                console.error('Image generation failed for prompt:', step.content, e);
+                                return { type: 'text', content: `**[فشل إنشاء الصورة]**\n_الموجه: "${step.content}"_` };
+                            }
                         }
-                        return typedStep;
+                        return step;
                     })
                 );
                 setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, whiteboardSteps: finalSteps } : m));
             })();
         }
 
-        setMessages(prev => prev.map(m => m.id === assistantMessageId ? {
-            ...m,
-            ...parsedData,
-            sources,
-            content: parsedData.content.replace(scrollPlayRegex, ''),
-// FIX: Explicitly cast step to WhiteboardStep to resolve potential type inference issues.
-            whiteboardSteps: parsedData.whiteboardSteps?.map((step) => {
-                const typedStep = step as WhiteboardStep;
-                return typedStep.type === 'generate_image' ? { type: 'image_loading', content: typedStep.content } : typedStep;
-            }),
-        } : m));
+        setMessages(prev => prev.map(m => {
+            if (m.id === assistantMessageId) {
+                const updatedMessage = { ...m, ...parsedData, sources };
+                if (parsedData.whiteboardSteps) {
+                    // FIX: Explicitly type the 'step' parameter to resolve the 'unknown' type error.
+                    updatedMessage.whiteboardSteps = parsedData.whiteboardSteps.map((step: WhiteboardStep) => 
+                        step.type === 'generate_image' 
+                            ? { type: 'image_loading', content: step.content } 
+                            : step
+                    );
+                }
+                return updatedMessage;
+            }
+            return m;
+        }));
       }
-      if(hasStartedDesignStream) onDesignStreamEnd?.();
 
     } catch (error) {
       console.error(error);
       setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ ما. يرجى المحاولة مرة أخرى.' } : m));
-      onDesignStreamEnd?.();
     } finally {
       setIsLoading(false);
       setIsPerformingWebSearch(false);
       stopGenerationRef.current = false;
       const duration = Date.now() - startTime;
-      setMessages(prev => prev.map(m => m.id === assistantMessageId && m.deepThinking ? { ...m, deepThinking: { ...m.deepThinking, duration }} : m));
+      setMessages(prev => prev.map(m => {
+        if (m.id === assistantMessageId && m.deepThinking) {
+            return { ...m, deepThinking: { ...m.deepThinking, duration }};
+        }
+        return m;
+      }));
     }
-  }, [isLoading, modelId, isWebSearchEnabled, isDeepThinkingEnabled, systemInstructionOverride, setScrollToLocation, setPlayLocation, onDesignMeta, onDesignStreamStart, onDesignStreamUpdate, onDesignStreamEnd]);
+  }, [isLoading, modelId, setScrollToLocation, setPlayLocation, isDeepThinkingEnabled, isWebSearchEnabled, setDesignContent, systemInstructionOverride, isPerformingWebSearch]);
   
   const handleExecuteResearch = useCallback(async (messageId: string, plan: string[]) => {
       const currentMessages = messagesRef.current;
@@ -537,7 +528,11 @@ export const ChatView: React.FC<ChatViewProps> = ({
       setIsPerformingWebSearch(true);
 
       const planMessageIndex = currentMessages.findIndex(m => m.id === messageId);
-      if (planMessageIndex === -1) { setIsLoading(false); setIsPerformingWebSearch(false); return; }
+      if (planMessageIndex === -1) {
+          setIsLoading(false);
+          setIsPerformingWebSearch(false);
+          return;
+      }
       const userMessageForResearch = currentMessages.slice(0, planMessageIndex).reverse().find(m => m.role === 'user');
       const researchTopic = userMessageForResearch?.content || "the user's request";
 
@@ -545,7 +540,12 @@ export const ChatView: React.FC<ChatViewProps> = ({
       const assistantMessage: Message = { id: assistantMessageId, role: 'assistant', content: '' };
       setMessages(prev => [...prev, assistantMessage]);
 
-      const history = currentMessages.filter(m => !(m.researchPlan && !m.isPlanExecuted)).map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
+      const history = currentMessages
+          .filter(m => !(m.researchPlan && !m.isPlanExecuted))
+          .map(m => ({
+              role: m.role === 'assistant' ? 'model' : 'user',
+              parts: [{ text: m.content }]
+          }));
 
       try {
           const stream = await executeResearch(researchTopic, plan, history);
@@ -560,33 +560,46 @@ export const ChatView: React.FC<ChatViewProps> = ({
               sources = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((s: any) => s.web).filter(Boolean) || sources;
               
               const parsedData = await parseMessageContent(finalContent);
-              setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, ...parsedData, sources, content: parsedData.content } : m));
+              if (parsedData.designContent && setDesignContent) setDesignContent(parsedData.designContent);
+
+              setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, ...parsedData, sources } : m));
           }
       } catch (error) {
           console.error(error);
-          setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ أثناء تنفيذ البحث.' } : m));
+          setMessages(prev => prev.map(m => m.id === assistantMessageId ? { ...m, content: 'عذراً، حدث خطأ أثناء تنفيذ البحث. يرجى المحاولة مرة أخرى.' } : m));
       } finally {
           setIsLoading(false);
           setIsPerformingWebSearch(false);
           stopGenerationRef.current = false;
       }
-  }, [isPerformingWebSearch]);
+  }, [setDesignContent, isPerformingWebSearch]);
   
   const handleRegenerate = useCallback((messageId: string) => {
     const assistantMessageIndex = messagesRef.current.findIndex(m => m.id === messageId);
     if (assistantMessageIndex <= 0) return;
-    const userMessage = messagesRef.current[assistantMessageIndex - 1];
+
+    const userMessageIndex = assistantMessageIndex - 1;
+    const userMessage = messagesRef.current[userMessageIndex];
+
     if (userMessage?.role !== 'user') return;
+
     setMessages(prev => prev.slice(0, assistantMessageIndex));
-    handleSendMessage(userMessage.content, [], true);
+
+    const fileAttachments: File[] = []; // Cannot get original File objects, so we resend without them.
+    handleSendMessage(userMessage.content, fileAttachments, true);
+
   }, [handleSendMessage]);
 
   const handleEditMessage = useCallback((messageId: string, newContent: string) => {
     const messageIndex = messagesRef.current.findIndex(m => m.id === messageId);
-    if (messageIndex === -1 || messagesRef.current[messageIndex].content.trim() === newContent.trim()) {
+    if (messageIndex === -1) return;
+
+    const originalMessage = messagesRef.current[messageIndex];
+    if (originalMessage.content.trim() === newContent.trim()) {
         setEditingMessageId(null);
         return;
     }
+    
     setMessages(messagesRef.current.slice(0, messageIndex));
     setEditingMessageId(null);
     setPendingPrompt(newContent);
@@ -608,11 +621,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
   
   const handlePaste = useCallback((event: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const files = Array.from(event.clipboardData.files);
-    if (files.some(file => file.type.startsWith('image/'))) {
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    if (imageFiles.length > 0) {
         event.preventDefault();
-        setAttachments(prev => [...prev, ...files.filter(f => f.type.startsWith('image/'))]);
+        if (attachments.length + imageFiles.length > 10) {
+            alert('يمكنك إرفاق 10 ملفات كحد أقصى لكل رسالة.');
+            return;
+        }
+        setAttachments(prev => [...prev, ...imageFiles]);
     }
-  }, []);
+  }, [attachments]);
 
   const handleExportChat = () => {
     if (messages.length === 0) return;
@@ -631,37 +649,82 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const a = document.createElement('a');
     a.href = url;
     a.download = `moho-ai-chat-${date}.md`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
   const handleNewChat = () => {
-    if (messages.length > 0 && window.confirm("هل أنت متأكد؟ سيتم مسح المحادثة الحالية.")) {
+    if (messages.length > 0 && window.confirm("هل أنت متأكد أنك تريد بدء محادثة جديدة؟ سيتم مسح المحادثة الحالية.")) {
         setMessages([]);
         processedWhiteboardRef.current.clear();
     }
   }
 
   const GoogleSearchIndicator: React.FC = () => (
-    <div className="flex justify-start my-4"><div className="flex items-center gap-3 px-4 py-2 bg-[var(--token-main-surface-secondary)] rounded-full border border-[var(--token-border-default)] shadow-sm animate-fade-in"><GoogleIcon className="w-5 h-5" /><span className="text-sm font-medium text-[var(--token-text-secondary)] animate-pulse">جارِ البحث...</span></div></div>
+    <div className="flex justify-start my-4">
+        <div className="flex items-center gap-3 px-4 py-2 bg-[var(--token-main-surface-secondary)] rounded-full border border-[var(--token-border-default)] shadow-sm animate-fade-in">
+            <GoogleIcon className="w-5 h-5" />
+            <span className="text-sm font-medium text-[var(--token-text-secondary)] animate-pulse">جارِ البحث...</span>
+        </div>
+    </div>
   );
   
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto relative">
-       {forwardingContent && <ForwardModal currentModelId={modelId} onSelectModel={handleForwardSelect} onClose={() => setForwardingContent(null)} />}
+       {forwardingContent && (
+            <ForwardModal
+                currentModelId={modelId}
+                onSelectModel={handleForwardSelect}
+                onClose={() => setForwardingContent(null)}
+            />
+        )}
         {messages.length > 0 && !isLoading && !systemInstructionOverride && (
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-1"><button onClick={handleNewChat} className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)]" aria-label="محادثة جديدة"><TrashIcon className="w-5 h-5" /></button><button onClick={handleExportChat} className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)]" aria-label="تصدير المحادثة"><DownloadIcon className="w-5 h-5" /></button></div>
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-1">
+                <button 
+                    onClick={handleNewChat}
+                    className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)] transition-colors"
+                    aria-label="محادثة جديدة"
+                >
+                    <TrashIcon className="w-5 h-5" />
+                </button>
+                <button 
+                    onClick={handleExportChat}
+                    className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)] transition-colors"
+                    aria-label="تصدير المحادثة"
+                >
+                    <DownloadIcon className="w-5 h-5" />
+                </button>
+            </div>
         )}
         <div className="flex-1 overflow-y-auto px-4 space-y-6 pt-4 pb-48">
             {messages.length === 0 && !systemInstructionOverride ? (
-                 <div className="flex flex-col items-center justify-center h-full text-center pb-16"><h1 className="text-4xl md:text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 mb-2">مرحباً، أنا موهو.</h1><h2 className="text-4xl md:text-5xl font-medium text-[var(--token-text-secondary)] mb-12">كيف يمكنني مساعدتك اليوم؟</h2></div>
+                 <div className="flex flex-col items-center justify-center h-full text-center pb-16">
+                    <h1 className="text-4xl md:text-5xl font-medium text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 mb-2">مرحباً، أنا موهو.</h1>
+                    <h2 className="text-4xl md:text-5xl font-medium text-[var(--token-text-secondary)] mb-12">كيف يمكنني مساعدتك اليوم؟</h2>
+                </div>
             ) : (
                 messages.map((msg, index) => (
-                    <MessageRenderer key={msg.id} message={msg} editingMessageId={editingMessageId} setEditingMessageId={setEditingMessageId} onEditMessage={handleEditMessage} onExecuteResearch={modelId === ModelId.RESEARCHER ? handleExecuteResearch : undefined} onForward={onModelChangeAndSetPrompt ? setForwardingContent : undefined} onRegenerate={msg.role === 'assistant' && index > 0 && messages[index - 1]?.role === 'user' ? handleRegenerate : undefined} isStreaming={isLoading && !isPerformingWebSearch && msg.role === 'assistant' && index === messages.length - 1} />
+                    <MessageRenderer
+                        key={msg.id}
+                        message={msg}
+                        editingMessageId={editingMessageId}
+                        setEditingMessageId={setEditingMessageId}
+                        onEditMessage={handleEditMessage}
+                        onExecuteResearch={modelId === ModelId.RESEARCHER ? handleExecuteResearch : undefined}
+                        onForward={onModelChangeAndSetPrompt ? setForwardingContent : undefined}
+                        onRegenerate={msg.role === 'assistant' && index > 0 && messages[index-1]?.role === 'user' ? handleRegenerate : undefined}
+                        isStreaming={isLoading && !isPerformingWebSearch && msg.role === 'assistant' && index === messages.length - 1}
+                    />
                 ))
             )}
             {isPerformingWebSearch && <GoogleSearchIndicator />}
-            {isLoading && !isPerformingWebSearch && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && <div className="flex justify-start"><LoadingIndicator /></div>}
+            {isLoading && !isPerformingWebSearch && messages.length > 0 && messages[messages.length - 1]?.role === 'user' && (
+                 <div className="flex justify-start">
+                    <LoadingIndicator />
+                </div>
+            )}
             <div ref={messagesEndRef} />
         </div>
 
@@ -670,15 +733,67 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(input, attachments); }} className="relative">
                      <div className="flex flex-col w-full rounded-3xl bg-[var(--token-main-surface-secondary)] border border-[var(--token-border-default)] transition-all" style={{boxShadow: 'var(--elevation-2)'}}>
                         {attachments.length > 0 && (
-                            <div className="p-3 border-b border-[var(--token-border-default)]"><p className="text-xs text-[var(--token-text-secondary)] mb-2">الملفات المرفقة:</p><div className="flex flex-wrap gap-2">{attachments.map((file, index) => (<div key={index} className="flex items-center gap-2 bg-[var(--token-main-surface-primary)] border border-[var(--token-border-default)] rounded-lg px-2 py-1 text-xs">{file.type.startsWith('image/') ? <ImagePlaceholderIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" /> : file.type.startsWith('audio/') ? <MusicIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" /> : <FileTextIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" />}<span className="text-[var(--token-text-primary)] max-w-40 truncate" title={file.name}>{file.name}</span><button type="button" onClick={() => handleRemoveAttachment(file)} className="text-[var(--token-icon-tertiary)] hover:text-[var(--token-text-primary)] flex-shrink-0"><XIcon className="w-4 h-4" /></button></div>))}</div></div>
+                            <div className="p-3 border-b border-[var(--token-border-default)]">
+                                <p className="text-xs text-[var(--token-text-secondary)] mb-2">الملفات المرفقة:</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {attachments.map((file, index) => (
+                                        <div key={index} className="flex items-center gap-2 bg-[var(--token-main-surface-primary)] border border-[var(--token-border-default)] rounded-lg px-2 py-1 text-xs">
+                                            {file.type.startsWith('image/') ? <ImagePlaceholderIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" /> : file.type.startsWith('audio/') ? <MusicIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" /> : <FileTextIcon className="w-4 h-4 text-[var(--token-icon-secondary)] flex-shrink-0" />}
+                                            <span className="text-[var(--token-text-primary)] max-w-40 truncate" title={file.name}>{file.name}</span>
+                                            <button type="button" onClick={() => handleRemoveAttachment(file)} className="text-[var(--token-icon-tertiary)] hover:text-[var(--token-text-primary)] flex-shrink-0"><XIcon className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                          <div className="relative flex min-h-[56px] items-end w-full p-2">
-                            <div className="flex items-center gap-1 flex-shrink-0">{currentModel?.features.fileUpload && (<><input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="*/*" /><button type="button" onClick={() => fileInputRef.current?.click()} className="w-10 h-10 grid place-content-center rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)] transition-colors" aria-label="إرفاق ملفات"><PaperclipIcon className="w-5 h-5"/></button></>)}</div>
-                            <textarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)} onPaste={handlePaste} placeholder={isListening ? "جارِ الاستماع..." : "اسأل عن أي شيء..."} className={`w-full bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-[var(--token-text-primary)] placeholder:text-[var(--token-text-tertiary)] text-base max-h-48 self-center px-2 ${inputFontClass || ''}`} rows={1} disabled={isLoading} />
-                            <div className="flex items-center gap-1 flex-shrink-0"><button type="button" onClick={handleListen} className={`w-10 h-10 grid place-content-center rounded-full transition-colors ${isListening ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 animate-pulse' : 'text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="استخدام الميكروفون"><MicrophoneIcon className="w-5 h-5" /></button>{isLoading ? (<button type="button" onClick={handleStopGeneration} className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900" aria-label="إيقاف التوليد"><StopCircleIcon className="w-5 h-5" /></button>) : (<button type="submit" onClick={createRipple} disabled={!input.trim() && attachments.length === 0} className="relative overflow-hidden w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 enabled:bg-[var(--token-interactive-bg-primary)] enabled:text-[var(--token-text-on-primary)] enabled:hover:bg-[var(--token-interactive-bg-primary-hover)] disabled:bg-[var(--token-main-surface-tertiary)] disabled:text-[var(--token-icon-tertiary)] disabled:cursor-not-allowed" style={!isLoading && (input.trim() || attachments.length > 0) ? {boxShadow: 'var(--elevation-2)'} : {}} aria-label="إرسال"><SendIcon className="w-6 h-6" /></button>)}</div>
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                                {currentModel?.features.fileUpload && (
+                                    <><input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="*/*" /><button type="button" onClick={() => fileInputRef.current?.click()} className="w-10 h-10 grid place-content-center rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)] transition-colors" aria-label="إرفاق ملفات"><PaperclipIcon className="w-5 h-5"/></button></>
+                                )}
+                            </div>
+                            <textarea
+                                ref={textareaRef}
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onPaste={handlePaste}
+                                placeholder={isListening ? "جارِ الاستماع..." : "اسأل عن أي شيء..."}
+                                className={`w-full bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-[var(--token-text-primary)] placeholder:text-[var(--token-text-tertiary)] text-base max-h-48 self-center px-2 ${inputFontClass || ''}`}
+                                rows={1}
+                                disabled={isLoading}
+                            />
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <button type="button" onClick={handleListen} className={`w-10 h-10 grid place-content-center rounded-full transition-colors ${isListening ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400 animate-pulse' : 'text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="استخدام الميكروفون"><MicrophoneIcon className="w-5 h-5" /></button>
+                              {isLoading ? (
+                                <button type="button" onClick={handleStopGeneration} className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900" aria-label="إيقاف التوليد"><StopCircleIcon className="w-5 h-5" /></button>
+                              ) : (
+                                <button type="submit" onClick={createRipple} disabled={!input.trim() && attachments.length === 0} className="relative overflow-hidden w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 enabled:bg-[var(--token-interactive-bg-primary)] enabled:text-[var(--token-text-on-primary)] enabled:hover:bg-[var(--token-interactive-bg-primary-hover)] disabled:bg-[var(--token-main-surface-tertiary)] disabled:text-[var(--token-icon-tertiary)] disabled:cursor-not-allowed" style={!isLoading && (input.trim() || attachments.length > 0) ? {boxShadow: 'var(--elevation-2)'} : {}} aria-label="إرسال"><SendIcon className="w-6 h-6" /></button>
+                              )}
+                            </div>
                          </div>
                          { !systemInstructionOverride && currentModel && (
-                             <div className="flex items-center justify-start flex-wrap gap-x-2 gap-y-1 px-4 pb-2 -mt-1 text-xs">{currentModel.features.designTool && (<button type="button" onClick={toggleDesignMode} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isDesignModeEnabled ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل وضع التصميم"><LayoutIcon className="w-3.5 h-3.5"/> <span>تصميم</span></button>)}{currentModel.features.deepThinking && (<button type="button" onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isDeepThinkingEnabled ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل التفكير العميق"><ThinkingIcon className="w-3.5 h-3.5"/> <span>تفكير عميق</span></button>)}{currentModel.features.webSearch && (<button type="button" onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isWebSearchEnabled ? 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل البحث في الويب"><GlobeIcon className="w-3.5 h-3.5"/> <span>بحث</span></button>)}{currentModel.features.chartGeneration && (<button type="button" onClick={() => setIsChartGenerationEnabled(!isChartGenerationEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isChartGenerationEnabled ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل إنشاء المخططات"><ChartBarIcon className="w-3.5 h-3.5"/> <span>مخطط</span></button>)}</div>
+                             <div className="flex items-center justify-start flex-wrap gap-x-2 gap-y-1 px-4 pb-2 -mt-1 text-xs">
+                                    {currentModel.features.designTool && (
+                                        <button type="button" onClick={toggleDesignMode} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isDesignModeEnabled ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل وضع التصميم">
+                                            <LayoutIcon className="w-3.5 h-3.5"/> <span>تصميم</span>
+                                        </button>
+                                    )}
+                                    {currentModel.features.deepThinking && (
+                                        <button type="button" onClick={() => setIsDeepThinkingEnabled(!isDeepThinkingEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isDeepThinkingEnabled ? 'bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل التفكير العميق">
+                                            <ThinkingIcon className="w-3.5 h-3.5"/> <span>تفكير عميق</span>
+                                        </button>
+                                    )}
+                                    {currentModel.features.webSearch && (
+                                         <button type="button" onClick={() => setIsWebSearchEnabled(!isWebSearchEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isWebSearchEnabled ? 'bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل البحث في الويب">
+                                            <GlobeIcon className="w-3.5 h-3.5"/> <span>بحث</span>
+                                        </button>
+                                    )}
+                                    {currentModel.features.chartGeneration && (
+                                         <button type="button" onClick={() => setIsChartGenerationEnabled(!isChartGenerationEnabled)} className={`flex items-center gap-1.5 py-1 px-2 rounded-full transition-colors ${isChartGenerationEnabled ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400' : 'text-[var(--token-text-secondary)] hover:bg-[var(--token-main-surface-tertiary)]'}`} aria-label="تفعيل إنشاء المخططات">
+                                            <ChartBarIcon className="w-3.5 h-3.5"/> <span>مخطط</span>
+                                        </button>
+                                    )}
+                             </div>
                          )}
                      </div>
                 </form>

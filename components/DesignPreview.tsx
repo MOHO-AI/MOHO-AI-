@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { RefreshIcon, MaximizeIcon, XIcon, DownloadIcon } from './Icons';
+import React, { useState, useEffect } from 'react';
+import { RefreshIcon, MaximizeIcon, XIcon } from './Icons';
 
 interface DesignPreviewProps {
   code: string;
-  designName: string;
-  isStreaming: boolean;
-  onRunCode: () => void;
+  setCode: (code: string) => void;
 }
 
 const FullScreenPreview: React.FC<{ code: string; onClose: () => void }> = ({ code, onClose }) => {
@@ -31,123 +27,72 @@ const FullScreenPreview: React.FC<{ code: string; onClose: () => void }> = ({ co
   );
 };
 
-export const DesignPreview: React.FC<DesignPreviewProps> = ({ code, designName, isStreaming, onRunCode }) => {
+export const DesignPreview: React.FC<DesignPreviewProps> = ({ code, setCode }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
+  const [iframeKey, setIframeKey] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const codeEndRef = useRef<HTMLDivElement>(null);
-  const [runKey, setRunKey] = useState(0);
-
 
   useEffect(() => {
-    // Automatically switch to code view when streaming starts
-    if (isStreaming) {
-      setActiveTab('code');
-    }
-  }, [isStreaming]);
-  
-  useEffect(() => {
-    // Scroll to the end of the code when it's updated during streaming
-    if (isStreaming && activeTab === 'code') {
-      setTimeout(() => codeEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-    }
-  }, [code, isStreaming, activeTab]);
+    setIframeKey(prev => prev + 1);
+  }, [code]);
 
-  const placeholder = `
-    <body style="margin: 0; background-color: var(--token-surface-container); direction: rtl;">
-      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'Tajawal', sans-serif; color: var(--token-on-surface-variant); padding: 2rem; text-align: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--token-outline); margin-bottom: 1rem;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
-        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--token-on-surface);">سيتم عرض المعاينة هنا</h3>
-        <p style="margin: 0; font-size: 0.9rem;">اطلب من "موهو المعقد" تصميم واجهة وسيتم عرضها هنا مباشرة.</p>
-      </div>
-    </body>
-  `;
-  
-  const handleDownload = () => {
-    if (!code) return;
-    const blob = new Blob([code], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${designName.replace(/ /g, '_') || 'design'}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleRunAndPreview = () => {
-    setRunKey(k => k + 1); // This forces iframe to re-render with new code
+  const handleRunCode = () => {
+    setIframeKey(prev => prev + 1);
     setActiveTab('preview');
   };
 
+  const placeholder = `
+    <body style="margin: 0; background-color: white; direction: rtl;">
+      <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: 'IBM Plex Sans Arabic', sans-serif; color: #606060; padding: 2rem; text-align: center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #909090; margin-bottom: 1rem;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><line x1="3" y1="9" x2="21" y2="9" /><line x1="9" y1="21" x2="9" y2="9" /></svg>
+        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: #303030;">سيتم عرض المعاينة هنا</h3>
+        <p style="margin: 0; font-size: 0.9rem;">سيتم عرض التصميم الذي تم إنشاؤه بواسطة النموذج في هذه النافذة.</p>
+      </div>
+    </body>
+  `;
+
   return (
     <>
-        <div className="bg-[var(--token-main-surface-primary)] rounded-2xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden" style={{boxShadow: 'var(--elevation-1)'}}>
-            <header className="p-2 pl-3 border-b border-[var(--token-border-default)] z-10 flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                     <button
+        <div className="bg-[var(--token-main-surface-secondary)] rounded-xl border border-[var(--token-border-default)] flex flex-col h-full overflow-hidden">
+            <div className="p-2 border-b border-[var(--token-border-default)] z-10 bg-[var(--token-main-surface-secondary)]/70 backdrop-blur-sm flex items-center justify-between">
+                <div className="flex items-center gap-1 w-10">
+                    <button
                         onClick={() => setIsFullScreen(true)}
-                        className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-secondary)] transition-colors"
+                        className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-primary)] transition-colors"
                         aria-label="عرض ملء الشاشة"
                     >
-                        <MaximizeIcon className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={handleDownload}
-                        disabled={!code}
-                        className="p-2 rounded-full text-[var(--token-icon-secondary)] hover:bg-[var(--token-main-surface-secondary)] transition-colors disabled:opacity-50"
-                        aria-label="تحميل الكود"
-                    >
-                        <DownloadIcon className="w-5 h-5" />
+                        <MaximizeIcon className="w-4 h-4" />
                     </button>
                 </div>
-                <h2 className="text-base font-semibold truncate px-2 text-[var(--token-on-surface)]" title={designName}>
-                    {designName || 'تصميم جديد'}
-                </h2>
-                <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-main-surface-secondary)]">
-                    <button onClick={() => setActiveTab('preview')} className={`px-4 py-1.5 text-sm rounded-full transition-all ${activeTab === 'preview' ? 'bg-[var(--token-main-surface-primary)] shadow-sm text-[var(--token-text-primary)] font-medium' : 'text-[var(--token-text-secondary)]'}`}>معاينة</button>
-                    <button onClick={() => setActiveTab('code')} className={`px-4 py-1.5 text-sm rounded-full transition-all ${activeTab === 'code' ? 'bg-[var(--token-main-surface-primary)] shadow-sm text-[var(--token-text-primary)] font-medium' : 'text-[var(--token-text-secondary)]'}`}>الكود</button>
+                <div className="flex items-center gap-1 p-1 rounded-full bg-[var(--token-main-surface-tertiary)]">
+                    <button onClick={() => setActiveTab('preview')} className={`px-4 py-1 text-sm rounded-full transition-all ${activeTab === 'preview' ? 'bg-[var(--token-main-surface-primary)] shadow-sm text-[var(--token-text-primary)] font-semibold' : 'text-[var(--token-text-secondary)]'}`}>معاينة</button>
+                    <button onClick={() => setActiveTab('code')} className={`px-4 py-1 text-sm rounded-full transition-all ${activeTab === 'code' ? 'bg-[var(--token-main-surface-primary)] shadow-sm text-[var(--token-text-primary)] font-semibold' : 'text-[var(--token-text-secondary)]'}`}>الكود</button>
                 </div>
-            </header>
-            <div className="flex-1 min-h-0 relative">
-                <div className={`w-full h-full ${activeTab === 'preview' ? 'block' : 'hidden'}`}>
-                    <iframe
-                        key={runKey}
-                        srcDoc={code || placeholder}
-                        title="Design Preview"
-                        sandbox="allow-scripts allow-same-origin"
-                        className="w-full h-full border-0"
-                        style={{backgroundColor: 'white'}}
-                    />
-                </div>
-                <div className={`w-full h-full ${activeTab === 'code' ? 'block' : 'hidden'}`} dir="ltr">
-                     {isStreaming && (
-                        <div className="absolute top-3 right-3 z-10 bg-black/60 text-white text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-sm">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span>يكتب...</span>
-                        </div>
-                    )}
-                    <SyntaxHighlighter 
-                        style={vscDarkPlus} 
-                        language="html"
-                        showLineNumbers 
-                        wrapLines
-                        lineNumberStyle={{ minWidth: '3.25em', color: '#858585', paddingRight: '1em', userSelect: 'none' }}
-                        customStyle={{ padding: '1rem', margin: 0, backgroundColor: '#1e1e1e', fontSize: '0.875rem', lineHeight: '1.5' }}
-                        codeTagProps={{ style: { fontFamily: "'Menlo', 'Monaco', 'Courier New', monospace" } }}
-                        className="w-full h-full overflow-auto"
-                    >
-                        {code || " "}
-                    </SyntaxHighlighter>
-                    <div ref={codeEndRef} />
-                </div>
+                <div className="w-10"></div>
             </div>
-            {activeTab === 'code' && (
-                <div className="p-3 border-t border-[var(--token-border-default)]">
-                    <button onClick={handleRunAndPreview} className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--token-primary-container)] text-[var(--token-on-primary-container)] font-semibold hover:opacity-90 transition-opacity">
-                        <RefreshIcon className="w-5 h-5"/>
-                        <span>تشغيل وتحديث المعاينة</span>
-                    </button>
+            {activeTab === 'preview' ? (
+                <iframe
+                key={iframeKey}
+                srcDoc={code || placeholder}
+                title="Design Preview"
+                sandbox="allow-scripts allow-same-origin"
+                className="w-full h-full border-0"
+                style={{backgroundColor: 'white'}}
+                />
+            ) : (
+                <div className="flex flex-col h-full bg-[#2d2d2d]" dir="ltr">
+                    <div className="p-2 flex-shrink-0 border-b border-gray-700">
+                        <button onClick={handleRunCode} className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">
+                            <RefreshIcon className="w-5 h-5"/>
+                            <span>تشغيل وتحديث المعاينة</span>
+                        </button>
+                    </div>
+                    <textarea
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        className="w-full h-full p-3 font-mono text-sm bg-transparent text-gray-200 border-0 focus:outline-none resize-none"
+                        spellCheck="false"
+                    />
                 </div>
             )}
         </div>
